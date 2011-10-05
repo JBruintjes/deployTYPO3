@@ -1,0 +1,49 @@
+deploymentName: example.com
+
+##
+# Place all environment configfuration values here
+typo3:
+    version: 4.5.3
+    sourceUrl: typo3tarballs.pimsnel.com
+    dummyNoVersion: 1
+
+##
+# List all extension bundles here so they can be checked out and symlinked
+extBundlesSvnUrl:
+    lwpublic:   https://svn.lingewoud.net/svn/typo3ext/lwpublic
+    lwvext:     https://svn.lingewoud.net/svn/typo3ext/lwvirtualext
+    lwinfra:    https://svn.lingewoud.net/svn/typo3ext/lwinfra
+    lwtpl:      https://svn.lingewoud.net/svn/typo3ext/lwtpl
+
+defaultSiteRootFiles:
+    defaultFiles1:   https://svn.lingewoud.net/svn/typo3siterootfiles/lingewoudDefaultFiles
+
+##
+# If you want single files in your SCM use this feature
+trackedPaths: 
+    - alias/dummy/.htaccess
+    - alias/typo3conf/localconf.php
+
+##
+# list your initial extra configuration here
+localconf:
+    initConf: |
+        $TYPO3_CONF_VARS['GFX']['TTFdpi']=96;
+        $TYPO3_CONF_VARS['GFX']['im_noFramePrepended'] = '1'; // Fix for endless loop in GraphicsMagick when spaces are in filenames
+        $TYPO3_CONF_VARS['GFX']['gdlib_png'] = '1'; 
+        $TYPO3_CONF_VARS['GFX']['png_truecolor'] = '1'; // Modified or inserted by Gabriel. 
+        $TYPO3_CONF_VARS['GFX']['jpg_quality'] = '90';  
+        $TYPO3_CONF_VARS['GFX']['thumbnails_png'] = '1';   
+        $TYPO3_CONF_VARS['GFX']['gdlib_2'] = '1';   
+
+appendPHPToFile:
+    tools:
+        file: typo3/mod/tools/conf.php
+        appendPHPCode: |
+            $MCONF['access']='user,group';
+    cooluri:
+        file: typo3conf/ext/cooluri/mod1/conf.php
+        appendPHPCode: |
+            $MCONF['access']='user,group';
+
+

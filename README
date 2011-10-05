@@ -1,0 +1,5 @@
+This directory contains a Rakefile which helps you installing a clean typo3 and 
+re-install when you want. It also helps you maintain your own directories
+with project files so you only have to put these files in your SCM like 
+subversion. Currently there are specialized svn tasks
+
