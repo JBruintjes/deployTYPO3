@@ -1,0 +1,7 @@
+config.yml
+*.swp
+web/
+alias/
+trackedPaths/
+typo3source/
+extBundles/

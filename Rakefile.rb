@@ -278,9 +278,22 @@ task :unpackt3 do
 	end
 
 	system('tar xzf typo3source/typo3_src-'+currentVersion+'.tar.gz -C web/')
+#	system('rm '+ File.join("web",currentDummydir,'typo3_src'))
+#	p 'ln -sf '+ File.join("web",currentDummydir,'typo3_src') +' ../typo3_src-'+currentVersion
+	system('ln -sf ../typo3_src-'+currentVersion + ' '+ File.join("web",currentDummydir,'typo3_src'))
+#	system('mv web/'+currentDummydir + "/ web/"+currentDummydir + "-bak-"+time.year.to_s+'-'+time.month.to_s+'-'+time.day.to_s+'-'+time.hour.to_s+'.'+time.min.to_s)
+	
 
 	#File.symlink( "web/"+currentDummydir+"/typo3", "../typo3") 
 	#system('chmod -Rf 777 web/' + currentDummydir)
+end
+
+task :purge do
+	print "remove complete typo3 deployment? Enter YES to confirm: " 
+	cleanConfirm = STDIN.gets.chomp
+	if(cleanConfirm.downcase=='yes')
+		system('rm -Rf web alias trackedPaths typo3source extBundles config/config.yml')
+	end
 end
 
 #remove?
@@ -455,7 +468,7 @@ task :copytypo3to do
 
 	print "Enter Mysql Root Password"
 	print "\n"
-    rootdbpass = STDIN.gets.chomp
+	    rootdbpass = STDIN.gets.chomp
 
 	dbsetarr = getDbSettings()
 	sourcedatabase = dbsetarr[3]
@@ -553,12 +566,43 @@ end
 
 desc 'appendPHPToFile: append configured php code to configured files, usefull for overriding modules configurations'
 task :appendPHPToFile do
+
+	CONFIG['appendPHPToFile'].each {|key,valarr|
+		print 'Append task for: '+key+ "\n"
+		filename = 'web/'+currentDummydir+'/'+valarr['file']
+		appendCode = valarr['appendPHPCode']
+		
+		if File.file?(filename) 
+			last_line = 0
+			file = File.open(filename, 'r+')
+			file.each { last_line = file.pos unless file.eof? }
+			file.seek(last_line, IO::SEEK_SET)
+			file.write(appendCode)
+			file.write("?>")
+			file.close
+		else
+		print "file does not exist: "+	filename + "\n"
+		end
+	}
+
+=begin
+	filename = "alias/typo3conf/localconf.php"
+
+	last_line = 0
+	file = File.open(filename, 'r+')
+	file.each { last_line = file.pos unless file.eof? }
+	file.seek(last_line, IO::SEEK_SET)
+	file.write(CONFIG['localconf']['initConf'])
+	file.write("?>")
+	file.close
+
 	print "not implemented yet"
 	print "\n"
+=end
 end
 
-desc 'appendPHPToFile: append configured php code to configured files, usefull for overriding modules configurations'
-task :appendPHPToFile do
+desc 'defaultSiteRootFiles: copy files into site root'
+task :defaultSiteRootFiles do
 	print "not implemented yet"
 	print "\n"
 end

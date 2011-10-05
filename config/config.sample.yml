@@ -3,7 +3,7 @@ deploymentName: example.com
 ##
 # Place all environment configfuration values here
 typo3:
-    version: 4.5.3
+    version: 4.5.6
     sourceUrl: typo3tarballs.pimsnel.com
     dummyNoVersion: 1
 
