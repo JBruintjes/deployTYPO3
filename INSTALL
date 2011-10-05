@@ -23,7 +23,7 @@ REQUIREMENTS
 
 FRESH INSTALL
 -------------
-1. untar deploytypo3.tar.bz2 or checkout deployTYPO3 where you want your TYPO3 installation
+1. untar deploytypo3.tar.bz2 or clone from git@github.com:mipmip/deployTYPO3.git in the directory where you want your TYPO3 installation.
 
 2. rename config/config.sample.yml to config/config.yml and check/change configuration
 
