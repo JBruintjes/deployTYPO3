@@ -26,7 +26,7 @@ trackedPaths = CONFIG['trackedPaths']
 time = Time.new
 
 deploymentName = CONFIG['deploymentName']
-deployTypo3Version = "1.1"
+deployTypo3Version = "1.3"
 currentVersion = CONFIG['typo3']['version'] 
 
 currentDummydir='dummy'
@@ -38,11 +38,12 @@ currentSrcTar = 'typo3_src-'+currentVersion+'.tar.gz'
 # All defined webdirectories
 webDir = File.join("web") 
 extBundlesDir = File.join("extBundles")
+rootFilesBundlesDir = File.join("rootFilesBundles")
 extSinglesDir = File.join("extSingles")
 typo3sourceDir = File.join("typo3source")
 aliasDir = File.join("alias")
 trackedPathsDir = File.join("trackedPaths")
-structDirs = [webDir, extBundlesDir, typo3sourceDir, aliasDir, trackedPathsDir]
+structDirs = [webDir, extBundlesDir, typo3sourceDir, aliasDir, trackedPathsDir, rootFilesBundlesDir]
 
 # Alias destinations for the updateAlias task
 aliasDests =  {}
@@ -292,7 +293,7 @@ task :purge do
 	print "remove complete typo3 deployment? Enter YES to confirm: " 
 	cleanConfirm = STDIN.gets.chomp
 	if(cleanConfirm.downcase=='yes')
-		system('rm -Rf web alias trackedPaths typo3source extBundles config/config.yml')
+		system('rm -Rf web alias trackedPaths typo3source extBundles '+rootFilesBundlesDir)
 	end
 end
 
@@ -603,7 +604,17 @@ end
 
 desc 'defaultSiteRootFiles: copy files into site root'
 task :defaultSiteRootFiles do
-	print "not implemented yet"
+
+	FileUtils.rm_r rootFilesBundlesDir, :force => true  
+	FileUtils.mkdir rootFilesBundlesDir
+
+	CONFIG['defaultSiteRootFiles'].each {|key,val|
+		p "checking out root files bundle: "+key
+		system("svn co " + val + " "+ rootFilesBundlesDir+"/"+ key)
+		p "syncing root files bundle: "+key
+		system("rsync --exclude=.git --exclude=.svn -av "+ rootFilesBundlesDir + "/"+ key +'/ web/'+currentDummydir +'/' )
+	}
+
 	print "\n"
 end
 
