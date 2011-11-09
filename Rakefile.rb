@@ -413,16 +413,17 @@ task :updateAlias do
 end
 
 task :insertInitConf do
+	if(CONFIG['localconf']['initConf'])
+		filename = "alias/typo3conf/localconf.php"
 
-	filename = "alias/typo3conf/localconf.php"
-
-	last_line = 0
-	file = File.open(filename, 'r+')
-	file.each { last_line = file.pos unless file.eof? }
-	file.seek(last_line, IO::SEEK_SET)
-	file.write(CONFIG['localconf']['initConf'])
-	file.write("?>")
-	file.close
+		last_line = 0
+		file = File.open(filename, 'r+')
+		file.each { last_line = file.pos unless file.eof? }
+		file.seek(last_line, IO::SEEK_SET)
+		file.write(CONFIG['localconf']['initConf'])
+		file.write("?>")
+		file.close
+	end
 end
 
 desc 'copytypo3to: copy complete typo3 environment including deployment scripts and database'
