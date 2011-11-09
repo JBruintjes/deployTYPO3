@@ -413,7 +413,7 @@ task :updateAlias do
 end
 
 task :insertInitConf do
-	if(CONFIG['localconf']['initConf'])
+	if(CONFIG.has_key?('localconf') && CONFIG['localconf'].has_key?('initConf'))
 		filename = "alias/typo3conf/localconf.php"
 
 		last_line = 0
