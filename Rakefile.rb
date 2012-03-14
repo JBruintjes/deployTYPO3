@@ -4,14 +4,17 @@
 
  Commandline Toolbox for TYPO3 administrator and developers made with Rake. Depends on Subversion.
 
- (C) 2009 Lingewoud BV <pim@lingewoud.nl>
- (C) 2010 Lingewoud BV <pim@lingewoud.nl>
+ (C) 2012 Lingewoud BV <pim@lingewoud.nl>
 
 =end
 
 require 'rake'  
 require 'fileutils'  
 require "yaml"
+require 'rss/1.0'
+require 'rss/2.0'
+require 'open-uri'
+require 'net/http'
 
 if File.file?("config/config.yml")
 	CONFIG = YAML::load(File.open("config/config.yml"))
@@ -244,20 +247,18 @@ end
 #desc 'getTarballs: download remote typo3 tarballs and store them in typo3source'
 task :getTarballs do
 
-	require 'net/http'
 
-	Net::HTTP.start(CONFIG['typo3']['sourceUrl']) { |http|
-		resp = http.get('/dummy-allversions.tar.gz')
-		open("typo3source/dummy-allversions.tar.gz", "w+") { |file|
-			file.write(resp.body)
-		}
-	}
-	Net::HTTP.start(CONFIG['typo3']['sourceUrl']) { |http2|
-		resp2 = http2.get('/'+currentSrcTar)
+sfmirror = CONFIG['typo3']['sfmirror']
+sourceUrl = sfmirror+'.dl.sourceforge.net'
+downloadLink='/project/typo3/TYPO3%20Source%20and%20Dummy/TYPO3%20'+currentVersion+'/typo3_src-'+currentVersion+'.tar.gz'
+
+Net::HTTP.start(sourceUrl) { |http2|
+	resp2 = http2.get(downloadLink)
 		open("typo3source/"+currentSrcTar, "w+") { |file2|
 			file2.write(resp2.body)
 		}
-	}
+}
+
 end
 
 #desc 'unpackt3: purge & unpack tarballs of current version'
@@ -274,7 +275,7 @@ task :unpackt3 do
 	end
 
 	if not File.directory?(File.join('web', currentDummydir))
-		system('tar xzf typo3source/dummy-allversions.tar.gz -C web/')
+		system('tar xzf dummy-allversions.tar.gz -C web/')
 		system('mv web/dummy-allversions web/'+currentDummydir)
 	end
 
@@ -632,6 +633,33 @@ task :cronSchedTask do
 	print "echo '*/5 * * * * root "+livePath+"/web/dummy/typo3/cli_dispatch.phpsh scheduler' > /etc/cron.d/typo3-"+deploymentName
 	print "\n"
 
+end
+
+desc 't3versions: show available TYPO3 versions'
+task :t3versions do
+
+	source = "http://sourceforge.net/api/file/index/project-id/20391/mtime/desc/rss"
+	content = "" # raw content of rss feed will be loaded here
+	open(source) do |s| content = s.read end
+	rss = RSS::Parser.parse(content, false)
+
+	print "RSS title: ", rss.channel.title, "\n"
+	print "RSS link: ", rss.channel.link, "\n"
+	print "RSS description: ", rss.channel.description, "\n"
+	print "RSS publication date: ", rss.channel.date, "\n"
+
+	puts "Item values"
+	_version_arr= []
+	rss.items.each { |item|
+		if item.title[0,24] =='/TYPO3 Source and Dummy/' 
+			_item = item.title[24,1000].split(/\//)
+			_version_arr << _item[0]
+		end
+	}
+	version_arr = _version_arr.uniq.sort
+	version_arr.each { |v|
+			print "version: ", v, "\n"
+	}
 end
 
 def getDbSettings()
