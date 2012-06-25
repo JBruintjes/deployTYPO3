@@ -58,6 +58,7 @@ aliasDests['fileadmin'] = '../web/'+currentDummydir+'/fileadmin'
 aliasDests['templates'] = '../web/'+currentDummydir+'/fileadmin/templates'
 
 upgradingSrc = false
+
 # ----------- DEFAULT TASK ---------- #
 
 task :default => :help
@@ -67,14 +68,13 @@ desc 'install: do a complete purge and install'
 task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, :checkoutExtBundles, :linkExtBundles, :checkoutExtSingles,:linkExtSingles,:updateAlias, :insertInitConf]
 
 desc 'upgradeSrc: upgrade to newer version'
-#task :upgrade => [:getTarballs ,:unpackt3, :checkoutExtBundles, :linkExtBundles, :checkoutExtSingles,:linkExtSingles,:updateAlias]
 task :upgradeSrc do
 
 	upgradingSrc = true
 
-    Rake::Task[:getTarballs].invoke
-    Rake::Task[:unpackt3].invoke
-    Rake::Task[:relink].invoke
+	Rake::Task[:getTarballs].invoke
+    	Rake::Task[:unpackt3].invoke
+    	Rake::Task[:relink].invoke
 
 	print "todo: backup localconf, trackedPaths, install, restore localconf, trackedPaths"
 	print "\n"
@@ -94,7 +94,8 @@ task :relink => [:linkExtBundles, :linkExtSingles, :updateAlias, :linkDummy, :li
 
 desc 'svnStatus: check status of extBundles and trackedPaths'
 task :svnStatus do
-    Rake::Task[:svnStatusExtBundles].invoke
+
+    	Rake::Task[:svnStatusExtBundles].invoke
 
 	print "checking de subversion status of tracked paths"
 	print "\n"

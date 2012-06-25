@@ -5,8 +5,12 @@ deploymentName: example.com
 # Choose one of the sourceforge mirrors:
 
 typo3:
-    version: 4.5.13 				# show all versions with rake t3versions
-    dummyNoVersion: 1				# depreciated
+    # show all versions with rake t3versions
+    version: 4.5.13
+
+    # depreciated
+    dummyNoVersion: 1
+
     sfmirror: netcologne
 	# North America:	iweb, superb-sea2, voxel, cdnetworks-us-1, cdnetworks-us-2 
 	# South America:	ufpr, 
