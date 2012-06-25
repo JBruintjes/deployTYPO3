@@ -1,6 +1,6 @@
 =begin
  
- Deploy TYPO3 Version 1.2
+ Deploy TYPO3 Version 1.4
 
  Commandline Toolbox for TYPO3 administrator and developers made with Rake. Depends on Subversion.
 
@@ -29,7 +29,7 @@ trackedPaths = CONFIG['trackedPaths']
 time = Time.new
 
 deploymentName = CONFIG['deploymentName']
-deployTypo3Version = "1.3"
+deployTypo3Version = "1.4"
 currentVersion = CONFIG['typo3']['version'] 
 
 currentDummydir='dummy'
@@ -152,27 +152,46 @@ task :checkoutExtSingles do
 	end
 end
 
-#desc 'checkoutExtBundles: checkout all ext bundles defined in config.yml'
+desc 'checkoutExtBundles: Purge and then checkout all ext bundles defined in config.yml'
 task :checkoutExtBundles do
 	p "checking out extension bundles"
 
 	FileUtils.rm_r "extBundles", :force => true  
 	FileUtils.mkdir "extBundles"
 
-	CONFIG['extBundlesSvnUrl'].each {|key,val|
-		system("svn co " + val + " extBundles/"+ key)
-	}
+	if(CONFIG['extBundlesSvnUrl']) 
+		CONFIG['extBundlesSvnUrl'].each {|key,val|
+			system("svn co " + val + " extBundles/"+ key)
+		}
+	end
+
+	if(CONFIG['extBundlesGitUrl']) 
+		CONFIG['extBundlesGitUrl'].each {|key,val|
+			system("git clone " + val + " extBundles/"+ key)
+		}
+	end
 end
 
 desc 'checkoutNewExtBundles: checkout missing ext bundles defined in config.yml'
 task :checkoutNewExtBundles do
 
 	p "checking out new missing extension bundles"
-	CONFIG['extBundlesSvnUrl'].each {|key,val|
-		if not File.directory?(File.join("extBundles",key))
-			system("svn co " + val + " extBundles/"+ key)
-		end
-	}
+	if(CONFIG['extBundlesSvnUrl']) 
+		CONFIG['extBundlesSvnUrl'].each {|key,val|
+			if not File.directory?(File.join("extBundles",key))
+				system("svn co " + val + " extBundles/"+ key)
+			end
+		}
+	end
+
+	if(CONFIG['extBundlesGitUrl']) 
+		CONFIG['extBundlesGitUrl'].each {|key,val|
+			if not File.directory?(File.join("extBundles",key))
+				system("git clone " + val + " extBundles/"+ key)
+			end
+		}
+	end
+
 end
 
 desc 'touchinst: Create a file typo3conf/ENABLE_INSTALL_TOOL'
