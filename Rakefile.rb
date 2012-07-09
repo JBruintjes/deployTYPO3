@@ -64,10 +64,10 @@ task :default => :help
 
 # ----------- BIG TASKS ---------- #
 desc 'install: do a complete purge and install'
-task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, :checkoutExtBundles, :linkExtBundles, :checkoutExtSingles,:linkExtSingles,:updateAlias, :insertInitConf]
+task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, :svnCheckoutExtBundles, :linkExtBundles, :checkoutExtSingles,:linkExtSingles,:updateAlias, :insertInitConf]
 
 desc 'upgradeSrc: upgrade to newer version'
-#task :upgrade => [:getTarballs ,:unpackt3, :checkoutExtBundles, :linkExtBundles, :checkoutExtSingles,:linkExtSingles,:updateAlias]
+#task :upgrade => [:getTarballs ,:unpackt3, :svnCheckoutExtBundles, :linkExtBundles, :checkoutExtSingles,:linkExtSingles,:updateAlias]
 task :upgradeSrc do
 
 	upgradingSrc = true
@@ -115,7 +115,7 @@ task :svnUpDryRunExtBundles do
 	}
 end
 
-#desc 'svnUpExtBundles: per extBundle update working copy'
+desc 'svnUpExtBundles: per extBundle update working copy'
 task :svnUpExtBundles do
 	p "updating extension bundles"
 
@@ -152,8 +152,8 @@ task :checkoutExtSingles do
 	end
 end
 
-#desc 'checkoutExtBundles: checkout all ext bundles defined in config.yml'
-task :checkoutExtBundles do
+desc 'svnCheckoutExtBundles: checkout all ext bundles defined in config.yml'
+task :svnCheckoutExtBundles do
 	p "checking out extension bundles"
 
 	FileUtils.rm_r "extBundles", :force => true  
@@ -164,8 +164,8 @@ task :checkoutExtBundles do
 	}
 end
 
-desc 'checkoutNewExtBundles: checkout missing ext bundles defined in config.yml'
-task :checkoutNewExtBundles do
+desc 'svnCheckoutNewExtBundles: checkout missing ext bundles defined in config.yml'
+task :svnCheckoutNewExtBundles do
 
 	p "checking out new missing extension bundles"
 	CONFIG['extBundlesSvnUrl'].each {|key,val|
