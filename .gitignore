@@ -6,3 +6,4 @@ trackedPaths/
 typo3source/
 extBundles/
 rootFilesBundles/
+.DS_Store
