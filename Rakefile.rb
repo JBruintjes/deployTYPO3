@@ -65,7 +65,7 @@ task :default => :help
 
 # ----------- BIG TASKS ---------- #
 desc 'install: do a complete purge and install'
-task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, :checkoutExtBundles, :linkExtBundles, :checkoutExtSingles,:linkExtSingles,:updateAlias, :insertInitConf]
+task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, :svnCheckoutExtBundles, :linkExtBundles, :checkoutExtSingles,:linkExtSingles,:updateAlias, :insertInitConf]
 
 desc 'upgradeSrc: upgrade to newer version'
 task :upgradeSrc do
@@ -73,8 +73,8 @@ task :upgradeSrc do
 	upgradingSrc = true
 
 	Rake::Task[:getTarballs].invoke
-    	Rake::Task[:unpackt3].invoke
-    	Rake::Task[:relink].invoke
+   	Rake::Task[:unpackt3].invoke
+   	Rake::Task[:relink].invoke
 
 	print "todo: backup localconf, trackedPaths, install, restore localconf, trackedPaths"
 	print "\n"
@@ -116,7 +116,7 @@ task :svnUpDryRunExtBundles do
 	}
 end
 
-#desc 'svnUpExtBundles: per extBundle update working copy'
+desc 'svnUpExtBundles: per extBundle update working copy'
 task :svnUpExtBundles do
 	p "updating extension bundles"
 
@@ -153,8 +153,8 @@ task :checkoutExtSingles do
 	end
 end
 
-desc 'checkoutExtBundles: Purge and then checkout all ext bundles defined in config.yml'
-task :checkoutExtBundles do
+desc 'scmCheckoutExtBundles: checkout all ext bundles defined in config.yml'
+task :scmCheckoutExtBundles do
 	p "checking out extension bundles"
 
 	FileUtils.rm_r "extBundles", :force => true  
@@ -173,8 +173,8 @@ task :checkoutExtBundles do
 	end
 end
 
-desc 'checkoutNewExtBundles: checkout missing ext bundles defined in config.yml'
-task :checkoutNewExtBundles do
+desc 'scmCheckoutNewExtBundles: checkout missing ext bundles defined in config.yml'
+task :scmCheckoutNewExtBundles do
 
 	p "checking out new missing extension bundles"
 	if(CONFIG['extBundlesSvnUrl']) 
