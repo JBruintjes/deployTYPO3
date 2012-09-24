@@ -65,7 +65,7 @@ task :default => :help
 
 # ----------- BIG TASKS ---------- #
 desc 'install: do a complete purge and install'
-task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, :svnCheckoutExtBundles, :linkExtBundles, :checkoutExtSingles,:linkExtSingles,:updateAlias, :insertInitConf]
+task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, :scmCheckoutExtBundles, :linkExtBundles, :checkoutExtSingles,:linkExtSingles,:updateAlias, :insertInitConf]
 
 desc 'upgradeSrc: upgrade to newer version'
 task :upgradeSrc do
