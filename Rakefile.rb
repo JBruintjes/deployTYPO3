@@ -31,11 +31,17 @@ time = Time.new
 deploymentName = CONFIG['deploymentName']
 deployTypo3Version = "1.4"
 currentVersion = CONFIG['typo3']['version'] 
+if currentVersion[0].to_i > 4
+	currentDummy = 'dummy-allversions6plus'
+	$localconfFile = 'LocalConfiguration.php'
+else
+	currentDummy = 'dummy-allversions'
+	$localconfFile = 'localconf.php'
+end
 
 currentDummydir='dummy'
 
 currentSrcdir= 'typo3_src-'+currentVersion
-currentDummyTar = 'dummy-allversions.tar.gz'
 currentSrcTar = 'typo3_src-'+currentVersion+'.tar.gz'
 
 # All defined webdirectories
@@ -65,7 +71,7 @@ task :default => :help
 
 # ----------- BIG TASKS ---------- #
 desc 'install: do a complete purge and install'
-task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, :scmCheckoutExtBundles, :linkExtBundles, :checkoutExtSingles,:linkExtSingles,:updateAlias, :insertInitConf]
+task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, :scmCheckoutExtBundles, :linkExtBundles, :checkoutExtSingles,:linkExtSingles,:updateAlias, :insertInitConf, :touchinst]
 
 desc 'upgradeSrc: upgrade to newer version'
 task :upgradeSrc do
@@ -295,8 +301,8 @@ task :unpackt3 do
 	end
 
 	if not File.directory?(File.join('web', currentDummydir))
-		system('tar xzf dummy-allversions.tar.gz -C web/')
-		system('mv web/dummy-allversions web/'+currentDummydir)
+		system('tar xzf '+currentDummy+'.tar.gz -C web/')
+		system('mv web/'+currentDummy+' web/'+currentDummydir)
 	end
 
 	system('tar xzf typo3source/typo3_src-'+currentVersion+'.tar.gz -C web/')
@@ -406,7 +412,7 @@ task :svnStatusExtBundles do
 	}
 end
 
-#desc 'rmdirStruct: remove all but the scriptfiles files'
+desc 'rmdirStruct: remove all but the scriptfiles files'
 task :rmdirStruct do
 	structDirs.each {|dirx|
 		FileUtils.rm_r dirx, :force => true  
@@ -435,7 +441,7 @@ end
 
 task :insertInitConf do
 	if(CONFIG.has_key?('localconf') && CONFIG['localconf'].has_key?('initConf'))
-		filename = "alias/typo3conf/localconf.php"
+		filename = "alias/typo3conf/"+$localconfFile
 
 		last_line = 0
 		file = File.open(filename, 'r+')
@@ -511,8 +517,7 @@ task :copytypo3to do
 	system("rm -Rf "+ ENV['destpath'] +'/alias/typo3conf/temp*')
 	system("rm -Rf "+ ENV['destpath'] +'/alias/typo3temp/*')
 
-	#p ENV['destpath']+'/alias/typo3conf/localconf.php'
-	setLocalconfDbSettings(ENV['destdbname'],ENV['destdbuser'],ENV['destdbpass'], 'localhost', ENV['destpath']+'/alias/typo3conf/localconf.php')
+	setLocalconfDbSettings(ENV['destdbname'],ENV['destdbuser'],ENV['destdbpass'], 'localhost', ENV['destpath']+'/alias/typo3conf/'+$localconfFile)
 end
 
 desc 'copydb: copy complete database structure and schema to a new database. This db must already exist'
@@ -608,20 +613,6 @@ task :appendPHPToFile do
 		end
 	}
 
-=begin
-	filename = "alias/typo3conf/localconf.php"
-
-	last_line = 0
-	file = File.open(filename, 'r+')
-	file.each { last_line = file.pos unless file.eof? }
-	file.seek(last_line, IO::SEEK_SET)
-	file.write(CONFIG['localconf']['initConf'])
-	file.write("?>")
-	file.close
-
-	print "not implemented yet"
-	print "\n"
-=end
 end
 
 desc 'defaultSiteRootFiles: copy files into site root'
@@ -683,13 +674,14 @@ task :t3versions do
 end
 
 def getDbSettings()
-	dbsettings = `php -r \'include "alias/typo3conf/localconf.php";echo "$typo_db_username $typo_db_password $typo_db_host $typo_db";\'`
+	cmd = "php -r \'include \"alias/typo3conf/"+$localconfFile+"\";echo \"$typo_db_username $typo_db_password $typo_db_host $typo_db\";\'"
+	dbsettings =%x[ #{cmd} ]
 	dbsettings.split(' ');
 end
 
 def setLocalconfDbSettings(db,user,pass,host='localhost',outfile='alias/typo3conf/localconf.new.php')
-
-	text = File.read('alias/typo3conf/localconf.php')
+	
+	text = File.read('alias/typo3conf/'+$localconfFile)
 	text = text.gsub(/^\$typo_db_password\ .*/, "$typo_db_password = '"+pass+"'; //set by Deploy TYPO3")
 	text = text.gsub(/^\$typo_db\ .*/, "$typo_db = '"+db+"'; //set by Deploy TYPO3")
 	text = text.gsub(/^\$typo_db_host\ .*/, "$typo_db_host = '"+host+"'; //set by Deploy TYPO3")
