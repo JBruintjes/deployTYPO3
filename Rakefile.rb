@@ -33,7 +33,9 @@ deployTypo3Version = "1.4"
 currentVersion = CONFIG['typo3']['version'] 
 if currentVersion[0].to_i > 4
 	currentDummy = 'dummy-allversions6plus'
+	currentDummy = 'dummy-allversions'
 	$localconfFile = 'LocalConfiguration.php'
+	$localconfFile = 'localconf.php'
 else
 	currentDummy = 'dummy-allversions'
 	$localconfFile = 'localconf.php'
