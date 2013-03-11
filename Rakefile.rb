@@ -326,21 +326,6 @@ task :purge do
 	end
 end
 
-task :flushdb do
-	print "Flush tables in DB? Enter YES to confirm: " 
-	#currentVersion = CONFIG['typo3']['version'] 
-	cleanConfirm = STDIN.gets.chomp
-	if(cleanConfirm.downcase=='yes')
-		print "Enter Mysql Root Password"
-		print "\n"
-		rootdbpass = STDIN.gets.chomp
-
-		cmd = "echo 'DROP DATABASE "+ CONFIG['typo3']['dbname'] +";CREATE DATABASE "+ CONFIG['typo3']['dbname'] +";' | mysql -uroot -p" + rootdbpass + " -h" + CONFIG['typo3']['dbhost']
-#		p cmd
-		system(cmd)
-	end
-end
-
 #remove?
 #desc 'packt3: pack tarballs to typo3source'
 #task :packt3 do
