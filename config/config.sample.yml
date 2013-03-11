@@ -1,69 +1,134 @@
+# vim: ft=yaml:sts=2:expandtab
+
+####################################################
+# Place all environment configfuration values here #
+####################################################
+
 deploymentName: example.com
-
-##
-# Place all environment configfuration values here
-# Choose one of the sourceforge mirrors:
-
 typo3:
     # show all versions with rake t3versions
-    version: 4.5.13
+    version: 4.7.9
 
     # depreciated
     dummyNoVersion: 1
 
+    # Choose one of the sourceforge mirrors:
+    # North America:        iweb, superb-sea2, voxel, cdnetworks-us-1, cdnetworks-us-2
+    # South America:        ufpr,
+    # Europe:               dfn, freefr ,garr, mesh, kent, heanet, surfnet, ovh, sunet, switch, citylan, ignum, netcologne,
+    # Australia:            waix, transact, internode, aarnet,
+    # Asia:                 jaist, ncu, nchc, cdnetworks-kr-1, cdnetworks-kr-2,
+    # Africa:               tenet    dummyNoVersion: 1
     sfmirror: netcologne
-	# North America:	iweb, superb-sea2, voxel, cdnetworks-us-1, cdnetworks-us-2 
-	# South America:	ufpr, 
-	# Europe: 		dfn, freefr ,garr, mesh, kent, heanet, surfnet, ovh, sunet, switch, citylan, ignum, netcologne, 
-	# Australia:		waix, transact, internode, aarnet, 
-	# Asia:			jaist, ncu, nchc, cdnetworks-kr-1, cdnetworks-kr-2, 
-	# Africa:		tenet    dummyNoVersion: 1
 
     dbname: lingewoudsql1
     dbuser: lingewoudsql1
     dbpass: test
     dbhost: localhost
 
+    sysExtList: 
+       - version
+#       - tsconfig_help
+       - context_help
+       - extra_page_cm_options
+       - impexp
+       - sys_note
+       - tstemplate
+       - tstemplate_ceditor
+       - tstemplate_info
+       - tstemplate_objbrowser
+       - tstemplate_analyzer
+       - func_wizards
+       - wizard_crpages
+       - wizard_sortpages
+       - lowlevel
+       - install
+       - belog
+       - beuser
+#       - aboutmodules
+       - setup
+#       - taskcenter
+       - info_pagetsconfig
+#       - viewpage
+       - rtehtmlarea
+       - css_styled_content
+       - t3skin
+#       - t3editor
+       - reports 
+
+extBundles:
+   pas3core:
+      type: git # git/svn/?
+      uri: https://github.com/PAS3/typo3-pas3-core.git 
+      branch: master
+      install: yes # yes/no
+
+extSingles:
+   templavoila:
+      type: ter # git/svn/ter/t3x/zip/?
+      uri: ter://templavoila
+      ref: >= 1.7.0 # =/>=/latest
+      install: yes
+
+TYPO3_CONF_VARS_SYS:
+   sitename: My Site
+
+TYPO3_CONF_VARS_EXT:
+   extList:
+   extConf:
+      saltedpasswords:
+         refxAddress: 172.16.145.1:3000
+         pas3RemoteDummyRoot: /Volumes/pas3/dummy
+
+#TYPO3_CONF_VARS_GFX:
+#   TTFdpi: 96
+#   im_noFramePrepended: im_noFramePrepended
+#   gdlib_png: 1
+#   png_truecolor: 1
+#   jpg_quality: 90
+#   thumbnails_png: 1
+#   gdlib_2: 1
+
 # List all GIT extension bundles here so they can be checked out and symlinked
-extBundlesGitUrl:
-    pas3core:   https://github.com/PAS3/typo3-pas3-core.git
+#extBundlesGitUrl:
+#    pas3core:   https://github.com/PAS3/typo3-pas3-core.git
 
 # List all SUBVERSION extension bundles here so they can be checked out and symlinked
-extBundlesSvnUrl:
-    lwpublic:   https://svn.lingewoud.net/svn/typo3ext/lwpublic
+#extBundlesSvnUrl:
+#    lwpublic:   https://svn.lingewoud.net/svn/typo3ext/lwpublic
 #    lwvext:     https://svn.lingewoud.net/svn/typo3ext/lwvirtualext
 #    lwinfra:    https://svn.lingewoud.net/svn/typo3ext/lwinfra
 #    lwtpl:      https://svn.lingewoud.net/svn/typo3ext/lwtpl
 
-defaultSiteRootFiles:
-    defaultFiles1:   https://svn.lingewoud.net/svn/typo3siterootfiles/lingewoudDefaultFiles
+#defaultSiteRootFiles:
+#    defaultFiles1:   https://svn.lingewoud.net/svn/typo3siterootfiles/lingewoudDefaultFiles
 
 ##
 # If you want single files in your SCM use this feature
-trackedPaths: 
-    - alias/dummy/.htaccess
-    - alias/typo3conf/localconf.php
+#trackedPaths: 
+#    - alias/dummy/.htaccess
+#    - alias/typo3conf/localconf.php
 
 ##
 # list your initial extra configuration here
-localconf:
-    initConf: |
-        $TYPO3_CONF_VARS['GFX']['TTFdpi']=96;
-        $TYPO3_CONF_VARS['GFX']['im_noFramePrepended'] = '1'; // Fix for endless loop in GraphicsMagick when spaces are in filenames
-        $TYPO3_CONF_VARS['GFX']['gdlib_png'] = '1'; 
-        $TYPO3_CONF_VARS['GFX']['png_truecolor'] = '1'; // Modified or inserted by Gabriel. 
-        $TYPO3_CONF_VARS['GFX']['jpg_quality'] = '90';  
-        $TYPO3_CONF_VARS['GFX']['thumbnails_png'] = '1';   
-        $TYPO3_CONF_VARS['GFX']['gdlib_2'] = '1';   
+#localconf:
+#    initConf: |
+#        $TYPO3_CONF_VARS['GFX']['TTFdpi']=96;
+#        $TYPO3_CONF_VARS['GFX']['im_noFramePrepended'] = '1'; // Fix for endless loop in GraphicsMagick when spaces are in filenames
+#        $TYPO3_CONF_VARS['GFX']['gdlib_png'] = '1'; 
+#        $TYPO3_CONF_VARS['GFX']['png_truecolor'] = '1'; // Modified or inserted by Gabriel. 
+#        $TYPO3_CONF_VARS['GFX']['jpg_quality'] = '90';  
+#        $TYPO3_CONF_VARS['GFX']['thumbnails_png'] = '1';   
+#        $TYPO3_CONF_VARS['GFX']['gdlib_2'] = '1';   
 
-appendPHPToFile:
-    tools:
-        file: typo3/mod/tools/conf.php
-        appendPHPCode: |
-            $MCONF['access']='user,group';
-    cooluri:
-        file: typo3conf/ext/cooluri/mod1/conf.php
-        appendPHPCode: |
-            $MCONF['access']='user,group';
+#appendPHPToFile:
+#    tools:
+#        file: typo3/mod/tools/conf.php
+#        appendPHPCode: |
+#            $MCONF['access']='user,group';
+#    cooluri:
+#        file: typo3conf/ext/cooluri/mod1/conf.php
+#        appendPHPCode: |
+#            $MCONF['access']='user,group';
 
 
