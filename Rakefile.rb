@@ -137,6 +137,7 @@ task :svnUpExtBundles do
 	}
 end
 
+
 #desc 'checkoutExtSingles: checkout all single extensions defined in config.yml'
 task :checkoutExtSingles do
 	if not CONFIG['extSingles'].nil?
@@ -688,35 +689,6 @@ task :t3versions do
 			print "version: ", v, "\n"
 	}
 end
-
-desc 'installSQL: Install all SQL files'
-task :installSQL do
-
-	baseSql = File.join('web',currentDummydir,"t3lib","stddb","tables.sql") 
-	cmd = "mysql " + CONFIG['typo3']['dbname'] + " -u"+CONFIG['typo3']['dbuser'] +" -p" + CONFIG['typo3']['dbpass'] + " -h" + CONFIG['typo3']['dbhost'] + " < " + baseSql
-	system(cmd)
-
-	extBase = File.join('web',currentDummydir,"typo3","sysext") 
-
-	CONFIG['typo3']['sysExtList'].each { | extName |
-
-		extSql = File.join(extBase,extName,"ext_tables.sql") 
-		extSqlStatic = File.join(extBase,extName,"ext_tables_static+adt.sql") 
-		if File.file?(extSql) 
-			cmd = "mysql " + CONFIG['typo3']['dbname'] + " -u"+CONFIG['typo3']['dbuser'] +" -p" + CONFIG['typo3']['dbpass'] + " -h" + CONFIG['typo3']['dbhost'] + " < " + extSql
-			system(cmd)
-			print cmd +"\n"
-		end 
-		if File.file?(extSqlStatic) 
-			cmd = "mysql " + CONFIG['typo3']['dbname'] + " -u"+CONFIG['typo3']['dbuser'] +" -p" + CONFIG['typo3']['dbpass'] + " -h" + CONFIG['typo3']['dbhost'] + " < " + extSqlStatic
-			system(cmd)
-			print cmd +"\n"
-		end 
-	}
-end
-
-
-
 
 def getDbSettings()
 	cmd = "php -r \'include \"alias/typo3conf/"+$localconfFile+"\";echo \"$typo_db_username $typo_db_password $typo_db_host $typo_db\";\'"
