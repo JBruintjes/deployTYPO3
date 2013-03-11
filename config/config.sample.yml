@@ -19,11 +19,6 @@ typo3:
 	# Asia:			jaist, ncu, nchc, cdnetworks-kr-1, cdnetworks-kr-2, 
 	# Africa:		tenet    dummyNoVersion: 1
 
-    dbname: lingewoudsql1
-    dbuser: lingewoudsql1
-    dbpass: test
-    dbhost: localhost
-
 # List all GIT extension bundles here so they can be checked out and symlinked
 extBundlesGitUrl:
     pas3core:   https://github.com/PAS3/typo3-pas3-core.git
