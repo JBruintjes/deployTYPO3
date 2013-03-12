@@ -5,5 +5,7 @@ alias/
 trackedPaths/
 typo3source/
 extBundles/
+extSingles/
+typo3
 rootFilesBundles/
 .DS_Store
