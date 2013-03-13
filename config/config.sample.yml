@@ -25,8 +25,8 @@ typo3:
 
     sysExtList: 
        - version
-       - tsconfig_help
-       - context_help
+ #      - tsconfig_help
+ #      - context_help
        - extra_page_cm_options
        - impexp
        - sys_note
@@ -35,7 +35,7 @@ typo3:
        - tstemplate_info
        - tstemplate_objbrowser
        - tstemplate_analyzer
-       - func_wizards
+#     - func_wizards
        - wizard_crpages
        - wizard_sortpages
        - lowlevel
@@ -44,13 +44,13 @@ typo3:
        - beuser
        - aboutmodules
        - setup
-       - taskcenter
+#       - taskcenter
        - info_pagetsconfig
        - viewpage
        - rtehtmlarea
        - css_styled_content
        - t3skin
-       - t3editor
+#       - t3editor
        - reports 
        - extbase
 
@@ -89,7 +89,7 @@ TYPO3_CONF_VARS_SYS:
 
 TYPO3_CONF_VARS_EXT:
    extConf:
-      saltedpasswords:
+      p3core_refx:
          refxAddress: 172.16.145.1:3000
          pas3RemoteDummyRoot: /Volumes/pas3/dummy
 
