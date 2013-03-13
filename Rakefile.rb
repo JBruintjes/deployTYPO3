@@ -1,12 +1,11 @@
 =begin
  
- Deploy TYPO3 Version 1.4
-
- Commandline Toolbox for TYPO3 administrator and developers made with Rake. Depends on Subversion.
-
- (C) 2012 Lingewoud BV <pim@lingewoud.nl>
+ Commandline Toolbox for TYPO3 administrator and developers made with Rake. 
+ (C) 2013 Lingewoud BV <pim@lingewoud.nl>
 
 =end
+
+deployTypo3Version = "1.5"
 
 require 'rake'  
 require 'fileutils'  
@@ -19,7 +18,7 @@ require 'net/http'
 if File.file?("config/config.yml")
 	CONFIG = YAML::load(File.open("config/config.yml"))
 else
-	print "Using sample configurtation, please replace with your own"
+	print "Using sample configuration, please replace with your own"
 	print "\n"
 	CONFIG = YAML::load(File.open("config/config.sample.yml"))
 end
@@ -29,7 +28,7 @@ trackedPaths = CONFIG['trackedPaths']
 time = Time.new
 
 deploymentName = CONFIG['deploymentName']
-deployTypo3Version = "1.4"
+
 currentVersion = CONFIG['typo3']['version'] 
 if currentVersion[0].to_i > 4
 	currentDummy = 'dummy-allversions6plus'
@@ -52,28 +51,17 @@ extBundlesDir = File.join("extBundles")
 rootFilesBundlesDir = File.join("rootFilesBundles")
 extSinglesDir = File.join("extSingles")
 typo3sourceDir = File.join("typo3source")
-aliasDir = File.join("alias")
 trackedPathsDir = File.join("trackedPaths")
-structDirs = [webDir, extBundlesDir, typo3sourceDir, aliasDir, trackedPathsDir, rootFilesBundlesDir]
-
-# Alias destinations for the updateAlias task
-aliasDests =  {}
-aliasDests['dummy'] 	= '../web/'+currentDummydir
-aliasDests['ext'] 		= '../web/'+currentDummydir+'/typo3conf/ext'
-aliasDests['typo3conf'] = '../web/'+currentDummydir+'/typo3conf'
-aliasDests['typo3temp'] = '../web/'+currentDummydir+'/typo3temp'
-aliasDests['fileadmin'] = '../web/'+currentDummydir+'/fileadmin'
-aliasDests['templates'] = '../web/'+currentDummydir+'/fileadmin/templates'
+structDirs = [webDir, extBundlesDir, typo3sourceDir, trackedPathsDir, rootFilesBundlesDir]
 
 upgradingSrc = false
 
-# ----------- DEFAULT TASK ---------- #
+$extList = []
 
 task :default => :help
 
-# ----------- BIG TASKS ---------- #
 desc 'install: do a complete purge and install'
-task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, :scmCheckoutExtBundles, :linkExtBundles, :checkoutExtSingles,:linkExtSingles,:updateAlias, :insertInitConf, :touchinst]
+task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, :dlExtBundles, :linkExtBundles, :dlExtSingles,:linkExtSingles, :insertInitConf, :touchinst]
 
 desc 'upgradeSrc: upgrade to newer version'
 task :upgradeSrc do
@@ -88,8 +76,6 @@ task :upgradeSrc do
 	print "\n"
 end
 
-# ----------- SMALL TASKS ---------- #
-
 desc 'desc: show main tasks'
 task :help do
 	print "DeployTYPO3 version " + deployTypo3Version
@@ -97,105 +83,71 @@ task :help do
 	system("rake -T")
 end
 
-desc 'relink: relink templateBundles, extBundles and aliases'
-task :relink => [:linkExtBundles, :linkExtSingles, :updateAlias, :linkDummy, :linkTypo3Fix]
+desc 'relink: relink templateBundles, extBundles'
+task :relink => [:rmExtSymlinks, :linkExtBundles, :linkExtSingles, :linkDummy, :linkTypo3Fix]
 
-desc 'svnStatus: check status of extBundles and trackedPaths'
-task :svnStatus do
+desc 'dlExtSingles: download all single extensions defined in config.yml'
+task :dlExtSingles do
+	if CONFIG['extSingles']
+		print "Downloading single extensions\n"
 
-    	Rake::Task[:svnStatusExtBundles].invoke
-
-	print "checking de subversion status of tracked paths"
-	print "\n"
-	system("svn status " + trackedPathsDir)
-end
-
-desc 'svnUpDryRunExtBundles: per extBundle see whats going to be updated'
-task :svnUpDryRunExtBundles do
-	print "dryrun updating extension bundles"
-	print "\n"
-
-	Dir.foreach(File.join("extBundles")) {|rdir| 
-		if checkValidDir(rdir) and File.directory?(File.join("extBundles",rdir))
-			p "In Extension Bundle #{rdir}"
-
-			system("svn merge --dry-run -r BASE:HEAD " + File.join("extBundles",rdir))
+		if not File.directory?(File.join(extSinglesDir))
+			FileUtils.mkdir extSinglesDir
 		end
-	}
-end
 
-desc 'svnUpExtBundles: per extBundle update working copy'
-task :svnUpExtBundles do
-	p "updating extension bundles"
+		CONFIG['extSingles'].each {|key,hash|
 
-	Dir.foreach(File.join("extBundles")) {|rdir| 
-		if checkValidDir(rdir) and File.directory?(File.join("extBundles",rdir))
-			p "In Extension Bundle #{rdir}"
+			if not File.directory?(File.join(extSinglesDir,key))
+				if(hash['type']=='git')
+					system("git clone " + hash['uri'] + " "+ File.join(extSinglesDir,key))
+				end
+				if(hash['type']=='ter')
+					
+					srcurl ='typo3.org'
+					p hash
+					srcpath = '/extensions/repository/download/'+key+'/'+hash['version']+'/t3x/'
+					destpath = File.join(extSinglesDir,key+'.t3x')
 
-			system("svn up " + File.join("extBundles",rdir))
-		end
-	}
-end
+					downloadTo(srcurl,srcpath,destpath)
+					cmd = '/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php extSingles/'+key+'.t3x '+ ' extSingles/'+key
+					system (cmd)
 
-#desc 'checkoutExtSingles: checkout all single extensions defined in config.yml'
-task :checkoutExtSingles do
-	if not CONFIG['extSingles'].nil?
-		p "checking out single extension"
-
-		FileUtils.rm_r extSinglesDir, :force => true  
-		FileUtils.mkdir extSinglesDir
-
-		CONFIG['extSingles'].each {|key,valarr|
-
-			revisionSubString = ''
-			if valarr['revision'].is_a?(Integer)
-				revisionSubString = ' -r '+ valarr['revision'].to_s + ' '
-				p revisionSubString.to_s
+					FileUtils.rm('extSingles/'+key+'.t3x')
+				end
 			end
 
-
-			p("svn co "+ revisionSubString + valarr['svnurl'] + " " + extSinglesDir+ "/"+ key)
-			system("svn co "+ revisionSubString + valarr['svnurl'] + " " + extSinglesDir+ "/"+ key)
 		}
 	end
 end
 
-desc 'scmCheckoutExtBundles: checkout all ext bundles defined in config.yml'
-task :scmCheckoutExtBundles do
-	p "checking out extension bundles"
+desc 'purgeExtSingles: purge all extSingles'
+task :purgeExtSingles do
+	FileUtils.rm_r extSinglesDir, :force => true  
+end
 
+desc 'purgeExtBundles: purge all extBundles'
+task :purgeExtBundles do
 	FileUtils.rm_r "extBundles", :force => true  
-	FileUtils.mkdir "extBundles"
-
-	if(CONFIG['extBundlesSvnUrl']) 
-		CONFIG['extBundlesSvnUrl'].each {|key,val|
-			system("svn co " + val + " extBundles/"+ key)
-		}
-	end
-
-	if(CONFIG['extBundlesGitUrl']) 
-		CONFIG['extBundlesGitUrl'].each {|key,val|
-			system("git clone " + val + " extBundles/"+ key)
-		}
-	end
 end
 
-desc 'scmCheckoutNewExtBundles: checkout missing ext bundles defined in config.yml'
-task :scmCheckoutNewExtBundles do
+desc 'dlExtBundles: Download all new extension bundles defined in config.yml'
+task :dlExtBundles do
+	print "Downloading all new extension bundles\n"
 
-	p "checking out new missing extension bundles"
-	if(CONFIG['extBundlesSvnUrl']) 
-		CONFIG['extBundlesSvnUrl'].each {|key,val|
-			if not File.directory?(File.join("extBundles",key))
-				system("svn co " + val + " extBundles/"+ key)
-			end
-		}
+	if not File.directory?(File.join("extBundles"))
+		FileUtils.mkdir "extBundles"
 	end
 
-	if(CONFIG['extBundlesGitUrl']) 
-		CONFIG['extBundlesGitUrl'].each {|key,val|
+	if(CONFIG['extBundles']) 
+		CONFIG['extBundles'].each {|key,hash|
+			print key
 			if not File.directory?(File.join("extBundles",key))
-				system("git clone " + val + " extBundles/"+ key)
+				if(hash['type']=='svn')
+					print("svn co " + hash['uri'] + " extBundles/"+ key)
+				end
+				if(hash['type']=='git')
+					system("git clone " + hash['uri'] + " extBundles/"+ key)
+				end
 			end
 		}
 	end
@@ -234,7 +186,7 @@ task :dbbackup do
 	dbsetarr = getDbSettings()
 
 	t = Time.now
-	datetime = t.strftime("%Y-%m-%d-time-%H:%M")   #=> "Printed on 04/09/2003"
+	datetime = t.strftime("%Y-%m-%d-time-%H.%M")   #=> "Printed on 04/09/2003"
 
 	print "Dumping database"
 	print "\n"
@@ -246,14 +198,13 @@ end
 desc 'rmcache: remove typo3conf cache & temp files'
 task :rmcache do
 	p "removing cache files"
-	system("rm -Rf alias/typo3temp/*")
+	system("rm -Rf web/dummy/typo3temp/*")
 	p "truncating typo3temp"
-	system("rm alias/typo3conf/temp_CACHED_*")
+	system("rm web/dummy/typo3conf/temp_CACHED_*")
 end
 
 desc 'copy all trackedPaths to trackedPathsDir for storage in SCM'
 task :trackDown do
-	#get dir struct relative to alias/[....]/
 	trackedPaths.each {|path|
 		File.makedirs(File.join('trackedPaths',File.dirname(path)))
 		FileUtils.cp_r(path, File.join('trackedPaths',File.dirname(path)))
@@ -271,24 +222,20 @@ end
 
 # ----------- SUB TASKS ---------- #
 
-#desc 'getTarballs: download remote typo3 tarballs and store them in typo3source'
 task :getTarballs do
+	sfmirror = CONFIG['typo3']['sfmirror']
+	sourceUrl = sfmirror+'.dl.sourceforge.net'
+	downloadLink='/project/typo3/TYPO3%20Source%20and%20Dummy/TYPO3%20'+currentVersion+'/typo3_src-'+currentVersion+'.tar.gz'
 
-
-sfmirror = CONFIG['typo3']['sfmirror']
-sourceUrl = sfmirror+'.dl.sourceforge.net'
-downloadLink='/project/typo3/TYPO3%20Source%20and%20Dummy/TYPO3%20'+currentVersion+'/typo3_src-'+currentVersion+'.tar.gz'
-
-Net::HTTP.start(sourceUrl) { |http2|
-	resp2 = http2.get(downloadLink)
-		open("typo3source/"+currentSrcTar, "w+") { |file2|
-			file2.write(resp2.body)
-		}
-}
+	Net::HTTP.start(sourceUrl) { |http2|
+		resp2 = http2.get(downloadLink)
+			open("typo3source/"+currentSrcTar, "w+") { |file2|
+				file2.write(resp2.body)
+			}
+	}
 
 end
 
-#desc 'unpackt3: purge & unpack tarballs of current version'
 task :unpackt3 do
 
 	if File.directory?(File.join('web', currentSrcdir))
@@ -311,7 +258,6 @@ task :unpackt3 do
 #	p 'ln -sf '+ File.join("web",currentDummydir,'typo3_src') +' ../typo3_src-'+currentVersion
 	system('ln -sf ../typo3_src-'+currentVersion + ' '+ File.join("web",currentDummydir,'typo3_src'))
 #	system('mv web/'+currentDummydir + "/ web/"+currentDummydir + "-bak-"+time.year.to_s+'-'+time.month.to_s+'-'+time.day.to_s+'-'+time.hour.to_s+'.'+time.min.to_s)
-	
 
 	#File.symlink( "web/"+currentDummydir+"/typo3", "../typo3") 
 	#system('chmod -Rf 777 web/' + currentDummydir)
@@ -321,40 +267,37 @@ task :purge do
 	print "remove complete typo3 deployment? Enter YES to confirm: " 
 	cleanConfirm = STDIN.gets.chomp
 	if(cleanConfirm.downcase=='yes')
-		system('rm -Rf web alias trackedPaths typo3source extBundles '+rootFilesBundlesDir)
+		system('rm -Rf web trackedPaths typo3source extBundles '+rootFilesBundlesDir)
 	end
 end
 
+desc 'flushdb: delete all tables'
 task :flushdb do
 	print "Flush tables in DB? Enter YES to confirm: " 
-	#currentVersion = CONFIG['typo3']['version'] 
 	cleanConfirm = STDIN.gets.chomp
 	if(cleanConfirm.downcase=='yes')
-		print "Enter Mysql Root Password"
-		print "\n"
-		rootdbpass = STDIN.gets.chomp
-
-		cmd = "echo 'DROP DATABASE "+ CONFIG['typo3']['dbname'] +";CREATE DATABASE "+ CONFIG['typo3']['dbname'] +";' | mysql -uroot -p" + rootdbpass + " -h" + CONFIG['typo3']['dbhost']
-#		p cmd
+		cmd = "mysql -u#{CONFIG['typo3']['dbuser']} -h#{CONFIG['typo3']['dbhost']} -p#{CONFIG['typo3']['dbpass']} #{CONFIG['typo3']['dbname']} -e \"show tables\" | grep -v Tables_in | grep -v \"+\" | gawk '{print \"drop table \" $1 \";\"}' | mysql -u#{CONFIG['typo3']['dbuser']} -h#{CONFIG['typo3']['dbhost']} -p#{CONFIG['typo3']['dbpass']} #{CONFIG['typo3']['dbname']}"
 		system(cmd)
 	end
 end
 
-#remove?
-#desc 'packt3: pack tarballs to typo3source'
-#task :packt3 do
-#	system('tar --directory web -c -z -f typo3source/dummy-'+currentVersion +'.tar.gz dummy-'+currentVersion)
-#	system('tar --directory web -c -z -f typo3source/typo3_src-'+currentVersion+'.tar.gz typo3_src-'+currentVersion)
-#end
+desc 'showTables: show all tables'
+task :showTables do
+	print "Show tables:" 
+	cmd = "mysql -u#{CONFIG['typo3']['dbuser']} -h#{CONFIG['typo3']['dbhost']} -p#{CONFIG['typo3']['dbpass']} #{CONFIG['typo3']['dbname']} -e \"show tables\""
+	system(cmd)
+end
 
-#desc 'linkTypo3Fix: create symlink to typo3 to fix certain backpath references'
 task :linkTypo3Fix do
 	print "symlink typo3 fix"
 	print "\n"
 	system('ln -sf '+ File.join("web",currentDummydir,'typo3') +' typo3')
 end
 
-#desc 'linkExtBundles: create symlinks in the structure to the dirs in the bundles'
+task :rmExtSymlinks do
+	system('rm -Rfv `find web/dummy/typo3conf/ext -type l`')
+end
+
 task :linkExtBundles do
 	print "linking extension bundles"
 	print "\n"
@@ -433,9 +376,6 @@ task :rmdirStruct do
 	structDirs.each {|dirx|
 		FileUtils.rm_r dirx, :force => true  
 	}
-
-	#??????
-	#rmsymlink(File.join('..','typo3'))
 end
 
 #desc 'dirstruct: make or update directory structure'
@@ -447,17 +387,9 @@ task :dirStruct do
 	}
 end
 
-#desc 'updateAlias: update all aliases into the alias-dir'
-task :updateAlias do
-	aliasDests.each {|k,v|
-		rmsymlink("alias/" + k)
-		system("ln -sf " + v + " alias/" + k)
-	}
-end
-
 task :insertInitConf do
 	if(CONFIG.has_key?('localconf') && CONFIG['localconf'].has_key?('initConf'))
-		filename = "alias/typo3conf/"+$localconfFile
+		filename = "web/dummy/typo3conf/"+$localconfFile
 
 		last_line = 0
 		file = File.open(filename, 'r+')
@@ -468,6 +400,15 @@ task :insertInitConf do
 		file.close
 	end
 end
+
+task :generateConf do
+#compile extList, all sysExt, plus all extBundles/ext's, plus all extSingles  
+	#sysextlist + contents of extBundles and extSingles
+compileExtList
+p $extList
+end
+
+
 
 desc 'copytypo3to: copy complete typo3 environment including deployment scripts and database'
 task :copytypo3to do
@@ -530,10 +471,10 @@ task :copytypo3to do
 	system("rsync -av ./ "+ ENV['destpath'] +'/')
 	print "\n"
 	print "Cleaning Cache en Temp directories\n"
-	system("rm -Rf "+ ENV['destpath'] +'/alias/typo3conf/temp*')
-	system("rm -Rf "+ ENV['destpath'] +'/alias/typo3temp/*')
+	system("rm -Rf "+ ENV['destpath'] +'/web/dummy/typo3conf/temp*')
+	system("rm -Rf "+ ENV['destpath'] +'/web/dummy/typo3temp/*')
 
-	setLocalconfDbSettings(ENV['destdbname'],ENV['destdbuser'],ENV['destdbpass'], 'localhost', ENV['destpath']+'/alias/typo3conf/'+$localconfFile)
+	setLocalconfDbSettings(ENV['destdbname'],ENV['destdbuser'],ENV['destdbpass'], 'localhost', ENV['destpath']+'/web/dummy/typo3conf/'+$localconfFile)
 end
 
 desc 'copydb: copy complete database structure and schema to a new database. This db must already exist'
@@ -647,7 +588,6 @@ task :defaultSiteRootFiles do
 	print "\n"
 end
 
-
 desc 'cronSchedTask: echo cron confguration'
 task :cronSchedTask do
 
@@ -692,41 +632,51 @@ end
 desc 'installSQL: Install all SQL files'
 task :installSQL do
 
-	baseSql = File.join('web',currentDummydir,"t3lib","stddb","tables.sql") 
-	cmd = "mysql " + CONFIG['typo3']['dbname'] + " -u"+CONFIG['typo3']['dbuser'] +" -p" + CONFIG['typo3']['dbpass'] + " -h" + CONFIG['typo3']['dbhost'] + " < " + baseSql
-	system(cmd)
+	filename='joined.sql'
+	if File.file?(filename) 
+		FileUtils.rm(filename)
+	end
 
-	extBase = File.join('web',currentDummydir,"typo3","sysext") 
+	$sqlFiles = []
+	$sqlFiles << File.join('web',currentDummydir,"t3lib","stddb","tables.sql") 
 
-	CONFIG['typo3']['sysExtList'].each { | extName |
+	compileExtList
+	$extList.each { | extName |
+	    extBase = File.join('web',currentDummydir,"typo3conf","ext") 
+		if CONFIG['typo3']['sysExtList'].include? extName
+			extBase = File.join('web',currentDummydir,"typo3","sysext") 
+		else
+			extBase = File.join('web',currentDummydir,"typo3conf","ext") 
+		end
 
 		extSql = File.join(extBase,extName,"ext_tables.sql") 
 		extSqlStatic = File.join(extBase,extName,"ext_tables_static+adt.sql") 
 		if File.file?(extSql) 
-			cmd = "mysql " + CONFIG['typo3']['dbname'] + " -u"+CONFIG['typo3']['dbuser'] +" -p" + CONFIG['typo3']['dbpass'] + " -h" + CONFIG['typo3']['dbhost'] + " < " + extSql
-			system(cmd)
-			print cmd +"\n"
+			$sqlFiles << extSql	
 		end 
 		if File.file?(extSqlStatic) 
-			cmd = "mysql " + CONFIG['typo3']['dbname'] + " -u"+CONFIG['typo3']['dbuser'] +" -p" + CONFIG['typo3']['dbpass'] + " -h" + CONFIG['typo3']['dbhost'] + " < " + extSqlStatic
-			system(cmd)
-			print cmd +"\n"
+			$sqlFiles << extSqlStatic	
 		end 
 	}
+
+	File.open(filename,"w"){|f|
+		  f.puts $sqlFiles.map{|s| IO.read(s)} 
+	}
+
+	cmd="web/dummy/typo3/cli_dispatch.phpsh lsd_deployt3iu compileSQL -f #{File.dirname(__FILE__)}/joined.sql"
+	system(cmd)
+
 end
 
-
-
-
 def getDbSettings()
-	cmd = "php -r \'include \"alias/typo3conf/"+$localconfFile+"\";echo \"$typo_db_username $typo_db_password $typo_db_host $typo_db\";\'"
+	cmd = "php -r \'include \"web/dummy/typo3conf/"+$localconfFile+"\";echo \"$typo_db_username $typo_db_password $typo_db_host $typo_db\";\'"
 	dbsettings =%x[ #{cmd} ]
 	dbsettings.split(' ');
 end
 
-def setLocalconfDbSettings(db,user,pass,host='localhost',outfile='alias/typo3conf/localconf.new.php')
+def setLocalconfDbSettings(db,user,pass,host='localhost',outfile='web/dummy/typo3conf/localconf.new.php')
 	
-	text = File.read('alias/typo3conf/'+$localconfFile)
+	text = File.read('web/dummy/typo3conf/'+$localconfFile)
 	text = text.gsub(/^\$typo_db_password\ .*/, "$typo_db_password = '"+pass+"'; //set by Deploy TYPO3")
 	text = text.gsub(/^\$typo_db\ .*/, "$typo_db = '"+db+"'; //set by Deploy TYPO3")
 	text = text.gsub(/^\$typo_db_host\ .*/, "$typo_db_host = '"+host+"'; //set by Deploy TYPO3")
@@ -741,9 +691,42 @@ def rmsymlink(symlink)
 end
 
 def checkValidDir(dir)
-	if dir!= '..' and dir != '.' and dir!= '.svn'
+	if dir!= '..' and dir != '.' and dir!= '.svn' and dir!= '.git'
 		return true
 	else
 		return false
 	end
 end
+
+def downloadTo(src_url,src_path,dest_filepath)
+	Net::HTTP.start(src_url) { |http2|
+		resp2 = http2.get(src_path)
+			open(dest_filepath, "w+") { |file2|
+				file2.write(resp2.body)
+			}
+	}
+end
+
+def compileExtList
+
+	$extList.concat(CONFIG['typo3']['sysExtList'])
+
+	extDest = File.join('web','dummy',"typo3conf","ext") 
+
+	Dir.foreach(File.join("extBundles")) {|rdir| 
+		if checkValidDir(rdir) and File.directory?(File.join("extBundles",rdir))
+			Dir.foreach(File.join("extBundles",rdir)) {|sdir| 
+				if checkValidDir(sdir) and File.directory?(File.join("extBundles",rdir,sdir))
+					$extList << sdir
+				end
+			}
+		end
+	}
+	Dir.foreach(File.join("extSingles")) {|rdir| 
+		if checkValidDir(rdir) and File.directory?(File.join("extSingles",rdir))
+			$extList << rdir
+		end
+	}
+end
+
+
