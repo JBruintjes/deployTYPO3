@@ -80,7 +80,7 @@ $extList = []
 task :default => :help
 
 desc 'desc: do a complete purge and install'
-task :t3_install => [:rmdirStruct, :dirStruct, :conf_init, :getTarballs ,:unpackt3, :ext_bundles_get, :linkExtBundles, :ext_singles_get,:linkExtSingles, :insertInitConf, :env_touchinst, :db_install]
+task :t3_install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, :env_localconf_gen, :ext_bundles_get, :linkExtBundles, :ext_singles_get,:linkExtSingles, :insertInitConf, :env_touchinst, :db_install]
 
 desc 'desc: generates a config.yml'
 task :conf_init do
@@ -136,6 +136,40 @@ task :conf_init do
 	File.open('config/config.yml', "w") {|file| file.puts text}
 end
 
+task :env_localconf_gen do
+	#TODO
+	#check db is set
+	#else ignore
+
+	print "Generating initial localconf.php\n"
+	filename = 'web/dummy/typo3conf/localconf.php'
+	appendCode = """
+# deployTYPO3 was here #
+# read more about it: https://github.com/Lingewoud/deployTYPO3 
+
+$typo_db_username = '#{CONFIG['typo3']['dbuser']}';   	//  Modified or inserted by deployTYPO3
+$typo_db_password = '#{CONFIG['typo3']['dbpass']}';   	// Modified or inserted by deployTYPO3
+$typo_db_host = '#{CONFIG['typo3']['dbhost']}';    		//  Modified or inserted by deployTYPO3
+$typo_db = '#{CONFIG['typo3']['dbname']}';				//  Modified or inserted by deployTYPO3
+	"""
+		
+	if File.file?(filename) 
+		last_line = 0
+		file = File.open(filename, 'r+')
+		file.each { last_line = file.pos unless file.eof? }
+		file.seek(last_line, IO::SEEK_SET)
+		file.write(appendCode)
+		file.write("?>")
+		file.close
+	else
+		print "file does not exist: "+	filename + "\n"
+	end
+
+	#	$TYPO3_CONF_VARS['EXT']['extList'] .= ',lsd_deployt3iu,extbase';
+	#	env_flush_cache
+	Rake::Task[:env_flush_cache].invoke
+end
+
 desc 'desc: upgrade to newer version'
 task :env_upgrade_src do
 
@@ -182,7 +216,7 @@ task :ext_singles_get do
 					
 					srcurl ='typo3.org'
 					p hash
-					srcpath = '/extensions/repository/download/'+key+'/'+hash['t3version']+'/t3x/'
+					srcpath = '/extensions/repository/download/'+key+'/'+hash['version']+'/t3x/'
 					destpath = File.join(extSinglesDir,key+'.t3x')
 
 					downloadTo(srcurl,srcpath,destpath)
@@ -707,6 +741,8 @@ end
 desc 'desc: Install all SQL files'
 task :db_install do
 
+
+
 	filename='joined.sql'
 	if File.file?(filename) 
 		FileUtils.rm(filename)
@@ -738,8 +774,53 @@ task :db_install do
 		  f.puts $sqlFiles.map{|s| IO.read(s)} 
 	}
 
+
+	### temporary install needed extensions
+	conffilename = 'web/dummy/typo3conf/localconf.php'
+	appendCode = """
+$TYPO3_CONF_VARS['EXT']['extList'] .= ',lsd_deployt3iu,extbase';
+	"""
+		
+	if File.file?(conffilename) 
+		last_line = 0
+		file = File.open(conffilename, 'r+')
+		file.each { last_line = file.pos unless file.eof? }
+		file.seek(last_line, IO::SEEK_SET)
+		file.write(appendCode)
+		file.write("?>")
+		file.close
+	else
+		print "file does not exist: "+	conffilename + "\n"
+	end
+
+	#	env_flush_cache
+	Rake::Task[:env_flush_cache].invoke
+
+	###### init.php security bypass
+	#$BE_USER->checkCLIuser();
+	#$BE_USER->backendCheckLogin();  // Checking if there's a user logged in
+
+	text = File.read('web/dummy/typo3/init.php')
+	text = text.gsub(/^\$BE_USER->checkCLIuser/, "\#$BE_USER->checkCLIuser")
+	text = text.gsub(/^\$BE_USER->backendCheckLogin/, "\#$BE_USER->backendCheckLogin")
+	File.open('web/dummy/typo3/init.php', "w") {|file| file.puts text}
+
 	cmd="web/dummy/typo3/cli_dispatch.phpsh lsd_deployt3iu compileSQL -f #{File.dirname(__FILE__)}/joined.sql"
 	system(cmd)
+
+	###### restore init.php security
+
+	text = File.read('web/dummy/typo3/init.php')
+	text = text.gsub(/^\#\$BE_USER->checkCLIuser/, "$BE_USER->checkCLIuser")
+	text = text.gsub(/^\#\$BE_USER->backendCheckLogin/, "$BE_USER->backendCheckLogin")
+	File.open('web/dummy/typo3/init.php', "w") {|file| file.puts text}
+
+	text = File.read(conffilename)
+	text = text.gsub(/^\$TYPO3_CONF_VARS\['EXT'\]\['extList'\]\ \.=\ ',lsd_deployt3iu,extbase';/, "")
+	File.open(conffilename, "w") {|file| file.puts text}
+
+	#	env_flush_cache
+	Rake::Task[:env_flush_cache].invoke
 
 end
 
