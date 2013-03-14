@@ -15,8 +15,8 @@ QuickStart 1
 ```
 git clone git://github.com/Lingewoud/deployTYPO3.git
 cd deployTYPO3
-rake init-config sitename=[Site Name] t3version=[4.x.x] dbname=[database] dbuser=[username] dbpass=[password] dbhost=[hostname]
-rake install
+rake conf_init sitename=[Site Name] t3version=[4.x.x] dbname=[database] dbuser=[username] dbpass=[password] dbhost=[hostname]
+rake t3_install
 ```
 
 
@@ -66,10 +66,43 @@ Requirements
 Usage
 =====
 
-Enter ```rake``` for a list of most important commands
-
 Have a look at the ```config/config.sample.yml``` file how to create a custom recipe.
 
+Enter ```rake help``` for an up to date list of most important commands
+
+```
+$ rake help
+(in /Users/pim/deployTYPO3)
+Using sample configuration, please replace with your own
+
+(in /Users/pim/deployTYPO3)
+Using sample configuration, please replace with your own
+rake conf_init          # desc: generates a config.yml
+rake db_backup          # desc: active database to sql-file
+rake db_copy            # desc: copy complete database structure and schema to a new database.
+rake db_flush           # desc: delete all tables
+rake db_install         # desc: Install all SQL files
+rake db_showtables      # desc: show all tables
+rake env_copy           # desc: copy complete typo3 environment including deployment scripts and database
+rake env_cron           # desc: echo cron confguration
+rake env_flush_cache    # desc: remove typo3conf cache & temp files
+rake env_info           # desc: Show main TYPO3 configured settings
+rake env_livelink       # desc: make link a dir lower indicating this is live
+rake env_purge          # desc: purges all typo3 files and extensions.
+rake env_relink         # desc: relink extension bundles and extensions
+rake env_touchinst      # desc: Create a file web/dummy/typo3conf/ENABLE_INSTALL_TOOL
+rake env_upgrade_src    # desc: upgrade to newer version
+rake ext_bundles_get    # desc: Download all new extension bundles defined in config.yml
+rake ext_bundles_purge  # desc: purge all extBundles
+rake ext_singles_get    # desc: download all single extensions defined in config.yml
+rake ext_singles_purge  # desc: purge all extSingles
+rake help               # desc: show main tasks
+rake patch_append_php   # desc: append configured php code to configured files, usefull for overriding modules configurations
+rake t3_install         # desc: do a complete purge and install
+rake t3_versions        # desc: show available TYPO3 versions
+
+DeployTYPO3 version 1.5
+```
 
 Contributing to deployTYPO3
 ===========================

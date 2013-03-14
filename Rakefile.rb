@@ -82,6 +82,7 @@ task :default => :help
 desc 'desc: do a complete purge and install'
 task :t3_install => [:rmdirStruct, :dirStruct, :conf_init, :getTarballs ,:unpackt3, :ext_bundles_get, :linkExtBundles, :ext_singles_get,:linkExtSingles, :insertInitConf, :env_touchinst]
 
+desc 'desc: generates a config.yml'
 task :conf_init do
 	p "ARGS"
 	p "DO"
@@ -102,9 +103,13 @@ end
 
 desc 'desc: show main tasks'
 task :help do
-	print "DeployTYPO3 version " + deployTypo3Version
 	print "\n"
 	system("rake -T")
+	print "\n"
+	print "DeployTYPO3 version " + deployTypo3Version
+	print "\n"
+	print "\n"
+
 end
 
 desc 'desc: relink extension bundles and extensions'
