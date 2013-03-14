@@ -8,8 +8,12 @@ Next and first official Version
 	* before everything first generate localconf
 * init.php security workaround
 	* comment in init.php
+
+	```
+	#$BE_USER->checkCLIuser();
+	#$BE_USER->backendCheckLogin(); // Checking if there's a user logged in
+	```
 * add db_install to main t3_install task
-* Add GPL everywhere needed
 
 Next Version
 -------------------------------
@@ -23,11 +27,6 @@ Next Version
 * create ext_emconf.php files
 * Git flow
 	* Next version task
-
-	```
-	#$BE_USER->checkCLIuser();
-	#$BE_USER->backendCheckLogin(); // Checking if there's a user logged in
-	```
 
 Planned
 -------

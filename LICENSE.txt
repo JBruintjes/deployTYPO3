@@ -1,7 +1,5 @@
 ---------------------------------
- The deployTypo3 licensing conditions
- 2009, Pim Snel (pim@lingewoud.nl)
+Copyright 2009, Pim Snel (pim@lingewoud.nl)
 ---------------------------------
-
-The deployTypo3 project is free software under the terms of the GNU General Public License.
+The deployTYPO3 project is free software under the terms of the GNU General Public License.
 The GNU/GPL license is found in the file GPL.txt
