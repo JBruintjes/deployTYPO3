@@ -3,17 +3,8 @@ To Do list for deployTYPO3
 
 Next and first official Version
 -------------------------------
-* rake conf_init
-* Complete localconf.php generation, maintainance
-	* before everything first generate localconf
-* init.php security workaround
-	* comment in init.php
 
-	```
-	#$BE_USER->checkCLIuser();
-	#$BE_USER->backendCheckLogin(); // Checking if there's a user logged in
-	```
-* add db_install to main t3_install task
+
 
 Next Version
 -------------------------------

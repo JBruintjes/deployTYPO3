@@ -15,7 +15,12 @@ QuickStart 1
 ```
 git clone git://github.com/Lingewoud/deployTYPO3.git
 cd deployTYPO3
-rake conf_init sitename=[Site Name] t3version=[4.x.x] dbname=[database] dbuser=[username] dbpass=[password] dbhost=[hostname]
+
+#rake conf_init sitename=[Site Name] t3version=[4.x.x] dbname=[database] dbuser=[username] dbpass=[password] dbhost=[hostname]
+
+# e.g.
+rake conf_init sitename=MySite t3version=4.7.9 dbname=lingewoudsql1 dbuser=lingewoudsql1 dbpass=test dbhost=localhost
+
 rake t3_install
 ```
 
