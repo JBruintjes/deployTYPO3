@@ -1,7 +1,26 @@
 =begin
  
  Commandline Toolbox for TYPO3 administrator and developers made with Rake. 
+
  (C) 2013 Lingewoud BV <pim@lingewoud.nl>
+
+Copyright 2013 Pim Snel Copyright 2013 Lingewoud b.v.
+
+This script is part of the TYPO3 project. The TYPO3 project is free software;
+you can redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation; either version 2 
+of the License, or (at your option) any later version.
+
+The GNU General Public License can be found at 
+http://www.gnu.org/copyleft/gpl.html. A copy is found in the textfile GPL.txt
+and important notices to the license from the author is found in LICENSE.txt
+distributed with these scripts.
+
+This script is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+This copyright notice MUST APPEAR in all copies of the script!
 
 =end
 
@@ -60,17 +79,22 @@ $extList = []
 
 task :default => :help
 
-desc 'install: do a complete purge and install'
-task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, :dlExtBundles, :linkExtBundles, :dlExtSingles,:linkExtSingles, :insertInitConf, :touchinst]
+desc 'desc: do a complete purge and install'
+task :t3_install => [:rmdirStruct, :dirStruct, :conf_init, :getTarballs ,:unpackt3, :ext_bundles_get, :linkExtBundles, :ext_singles_get,:linkExtSingles, :insertInitConf, :env_touchinst]
 
-desc 'upgradeSrc: upgrade to newer version'
-task :upgradeSrc do
+task :conf_init do
+	p "ARGS"
+	p "DO"
+end
+
+desc 'desc: upgrade to newer version'
+task :env_upgrade_src do
 
 	upgradingSrc = true
 
 	Rake::Task[:getTarballs].invoke
    	Rake::Task[:unpackt3].invoke
-   	Rake::Task[:relink].invoke
+   	Rake::Task[:env_relink].invoke
 
 	print "todo: backup localconf, trackedPaths, install, restore localconf, trackedPaths"
 	print "\n"
@@ -83,11 +107,11 @@ task :help do
 	system("rake -T")
 end
 
-desc 'relink: relink templateBundles, extBundles'
-task :relink => [:rmExtSymlinks, :linkExtBundles, :linkExtSingles, :linkDummy, :linkTypo3Fix]
+desc 'desc: relink extension bundles and extensions'
+task :env_relink => [:rmExtSymlinks, :linkExtBundles, :linkExtSingles, :linkDummy, :linkTypo3Fix]
 
-desc 'dlExtSingles: download all single extensions defined in config.yml'
-task :dlExtSingles do
+desc 'desc: download all single extensions defined in config.yml'
+task :ext_singles_get do
 	if CONFIG['extSingles']
 		print "Downloading single extensions\n"
 
@@ -120,18 +144,18 @@ task :dlExtSingles do
 	end
 end
 
-desc 'purgeExtSingles: purge all extSingles'
-task :purgeExtSingles do
+desc 'desc: purge all extSingles'
+task :ext_singles_purge do
 	FileUtils.rm_r extSinglesDir, :force => true  
 end
 
-desc 'purgeExtBundles: purge all extBundles'
-task :purgeExtBundles do
+desc 'desc: purge all extBundles'
+task :ext_bundles_purge do
 	FileUtils.rm_r "extBundles", :force => true  
 end
 
-desc 'dlExtBundles: Download all new extension bundles defined in config.yml'
-task :dlExtBundles do
+desc 'desc: Download all new extension bundles defined in config.yml'
+task :ext_bundles_get do
 	print "Downloading all new extension bundles\n"
 
 	if not File.directory?(File.join("extBundles"))
@@ -151,18 +175,17 @@ task :dlExtBundles do
 			end
 		}
 	end
-
 end
 
-desc 'touchinst: Create a file typo3conf/ENABLE_INSTALL_TOOL'
-task :touchinst do
+desc 'desc: Create a file web/dummy/typo3conf/ENABLE_INSTALL_TOOL'
+task :env_touchinst do
 	p "creating ENABLE_INSTALL_TOOL"
 	
 	system('touch web/'+currentDummydir+'/typo3conf/ENABLE_INSTALL_TOOL')
 end
 
-desc 'info: Show main TYPO3 configured settings'
-task :info do
+desc 'desc: Show main TYPO3 configured settings'
+task :env_info do
 	dbsetarr = getDbSettings()
 
 	print "\n"
@@ -181,8 +204,8 @@ task :info do
 	print "\n"
 end
 
-desc 'dbbackup: dump database'
-task :dbbackup do
+desc 'desc: active database to sql-file'
+task :db_backup do
 	dbsetarr = getDbSettings()
 
 	t = Time.now
@@ -195,15 +218,15 @@ task :dbbackup do
 
 end
 
-desc 'rmcache: remove typo3conf cache & temp files'
-task :rmcache do
+desc 'desc: remove typo3conf cache & temp files'
+task :env_flush_cache do
 	p "removing cache files"
 	system("rm -Rf web/dummy/typo3temp/*")
 	p "truncating typo3temp"
 	system("rm web/dummy/typo3conf/temp_CACHED_*")
 end
 
-desc 'copy all trackedPaths to trackedPathsDir for storage in SCM'
+#desc 'copy all trackedPaths to trackedPathsDir for storage in SCM'
 task :trackDown do
 	trackedPaths.each {|path|
 		File.makedirs(File.join('trackedPaths',File.dirname(path)))
@@ -263,7 +286,8 @@ task :unpackt3 do
 	#system('chmod -Rf 777 web/' + currentDummydir)
 end
 
-task :purge do
+desc 'desc: purges all typo3 files and extensions. Only leaving this script and your config.yml'
+task :env_purge do
 	print "remove complete typo3 deployment? Enter YES to confirm: " 
 	cleanConfirm = STDIN.gets.chomp
 	if(cleanConfirm.downcase=='yes')
@@ -271,8 +295,8 @@ task :purge do
 	end
 end
 
-desc 'flushdb: delete all tables'
-task :flushdb do
+desc 'desc: delete all tables'
+task :db_flush do
 	print "Flush tables in DB? Enter YES to confirm: " 
 	cleanConfirm = STDIN.gets.chomp
 	if(cleanConfirm.downcase=='yes')
@@ -281,8 +305,8 @@ task :flushdb do
 	end
 end
 
-desc 'showTables: show all tables'
-task :showTables do
+desc 'desc: show all tables'
+task :db_showtables do
 	print "Show tables:" 
 	cmd = "mysql -u#{CONFIG['typo3']['dbuser']} -h#{CONFIG['typo3']['dbhost']} -p#{CONFIG['typo3']['dbpass']} #{CONFIG['typo3']['dbname']} -e \"show tables\""
 	system(cmd)
@@ -371,7 +395,7 @@ task :svnStatusExtBundles do
 	}
 end
 
-desc 'rmdirStruct: remove all but the scriptfiles files'
+#desc 'rmdirStruct: remove all but the scriptfiles files'
 task :rmdirStruct do
 	structDirs.each {|dirx|
 		FileUtils.rm_r dirx, :force => true  
@@ -408,10 +432,8 @@ compileExtList
 p $extList
 end
 
-
-
-desc 'copytypo3to: copy complete typo3 environment including deployment scripts and database'
-task :copytypo3to do
+desc 'desc: copy complete typo3 environment including deployment scripts and database'
+task :env_copy do
 	err = Array.new
 
 	if ENV['destpath'].nil?
@@ -442,11 +464,11 @@ task :copytypo3to do
 		end
 		print "\n"
 		print "Usage:\n"
-		print "rake copytypo3to destpath=[/newpath] destdbname=[database] destdbuser=[username] destdbpass=[password]"
+		print "rake env_copy destpath=[/newpath] destdbname=[database] destdbuser=[username] destdbpass=[password]"
 		print "\n"
 		print "\n"
 		print "Example:\n"
-		print "rake copytypo3to destpath=../typo3copy destdbname=testdb destdbuser=testdbuser destdbpass=testdbpasswordv"
+		print "rake env_copy destpath=../typo3copy destdbname=testdb destdbuser=testdbuser destdbpass=testdbpasswordv"
 		print "\n"
 		print "\n"
 		exit
@@ -477,8 +499,8 @@ task :copytypo3to do
 	setLocalconfDbSettings(ENV['destdbname'],ENV['destdbuser'],ENV['destdbpass'], 'localhost', ENV['destpath']+'/web/dummy/typo3conf/'+$localconfFile)
 end
 
-desc 'copydb: copy complete database structure and schema to a new database. This db must already exist'
-task :copydb do
+desc 'desc: copy complete database structure and schema to a new database. This db must already exist'
+task :db_copy do
 	err = Array.new
 
 	if ENV['destdbname'].nil?
@@ -505,11 +527,11 @@ task :copydb do
 		end
 		print "\n"
 		print "Usage:\n"
-		print "rake copydb destdbname=[database]"
+		print "rake db_copy destdbname=[database]"
 		print "\n"
 		print "\n"
 		print "Example:\n"
-		print "rake copydb destdbname=testdb"
+		print "rake db_copy destdbname=testdb"
 		print "\n"
 		print "\n"
 		exit
@@ -535,8 +557,8 @@ task :setdatabasetest do
 	setLocalconfDbSettings('dbname','user','password','host')
 end
 
-desc 'setLive: make link a dir lower indicating this is live'
-task :setLive do
+desc 'desc: make link a dir lower indicating this is live'
+task :env_livelink do
 
 	if(!deploymentName)
 		deploymentName = 'noName-please-configure'
@@ -549,8 +571,8 @@ task :setLive do
 	system('ln -sf ' + Dir.pwd + ' ' + File.join("..",'TYPO3Live-'+deploymentName))
 end
 
-desc 'appendPHPToFile: append configured php code to configured files, usefull for overriding modules configurations'
-task :appendPHPToFile do
+desc 'desc: append configured php code to configured files, usefull for overriding modules configurations'
+task :patch_append_php do
 
 	CONFIG['appendPHPToFile'].each {|key,valarr|
 		print 'Append task for: '+key+ "\n"
@@ -572,7 +594,7 @@ task :appendPHPToFile do
 
 end
 
-desc 'defaultSiteRootFiles: copy files into site root'
+#desc 'defaultSiteRootFiles: copy files into site root'
 task :defaultSiteRootFiles do
 
 	FileUtils.rm_r rootFilesBundlesDir, :force => true  
@@ -588,8 +610,8 @@ task :defaultSiteRootFiles do
 	print "\n"
 end
 
-desc 'cronSchedTask: echo cron confguration'
-task :cronSchedTask do
+desc 'desc: echo cron confguration'
+task :env_cron do
 
 	livePath = File.expand_path(File.join(Dir.pwd,"..",'TYPO3Live-'+deploymentName))
 
@@ -602,8 +624,8 @@ task :cronSchedTask do
 
 end
 
-desc 't3versions: show available TYPO3 versions'
-task :t3versions do
+desc 'desc: show available TYPO3 versions'
+task :t3_versions do
 
 	source = "http://sourceforge.net/api/file/index/project-id/20391/mtime/desc/rss"
 	content = "" # raw content of rss feed will be loaded here
@@ -629,8 +651,8 @@ task :t3versions do
 	}
 end
 
-desc 'installSQL: Install all SQL files'
-task :installSQL do
+desc 'desc: Install all SQL files'
+task :db_install do
 
 	filename='joined.sql'
 	if File.file?(filename) 

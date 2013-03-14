@@ -93,41 +93,20 @@ TYPO3_CONF_VARS_EXT:
          refxAddress: 172.16.145.1:3000
          pas3RemoteDummyRoot: /Volumes/pas3/dummy
 
-#TYPO3_CONF_VARS_GFX:
-#   TTFdpi: 96
-#   im_noFramePrepended: im_noFramePrepended
-#   gdlib_png: 1
-#   png_truecolor: 1
-#   jpg_quality: 90
-#   thumbnails_png: 1
-#   gdlib_2: 1
+TYPO3_CONF_VARS_GFX:
+   TTFdpi: 96
+   im_noFramePrepended: im_noFramePrepended
+   gdlib_png: 1
+   png_truecolor: 1
+   jpg_quality: 90
+   thumbnails_png: 1
+   gdlib_2: 1
 
-#defaultSiteRootFiles:
-#    defaultFiles1:   https://svn.lingewoud.net/svn/typo3siterootfiles/lingewoudDefaultFiles
-
-##
-# If you want single files in your SCM use this feature
-#trackedPaths: 
-#    - alias/dummy/.htaccess
-#    - alias/typo3conf/localconf.php
-
-##
-# list your initial extra configuration here
-#localconf:
-#    initConf: |
-#        $TYPO3_CONF_VARS['GFX']['TTFdpi']=96;
-#        $TYPO3_CONF_VARS['GFX']['im_noFramePrepended'] = '1'; // Fix for endless loop in GraphicsMagick when spaces are in filenames
-#        $TYPO3_CONF_VARS['GFX']['gdlib_png'] = '1'; 
-#        $TYPO3_CONF_VARS['GFX']['png_truecolor'] = '1'; // Modified or inserted by Gabriel. 
-#        $TYPO3_CONF_VARS['GFX']['jpg_quality'] = '90';  
-#        $TYPO3_CONF_VARS['GFX']['thumbnails_png'] = '1';   
-#        $TYPO3_CONF_VARS['GFX']['gdlib_2'] = '1';   
-
-#appendPHPToFile:
-#    tools:
-#        file: typo3/mod/tools/conf.php
-#        appendPHPCode: |
-#            $MCONF['access']='user,group';
+appendPHPToFile:
+    tools:
+        file: typo3/mod/tools/conf.php
+        appendPHPCode: |
+            $MCONF['access']='user,group';
 #    cooluri:
 #        file: typo3conf/ext/cooluri/mod1/conf.php
 #        appendPHPCode: |
