@@ -24,6 +24,12 @@ rake conf_init sitename=MySite t3version=4.7.9 dbname=lingewoudsql1 dbuser=linge
 rake t3_install
 ```
 
+***NOTE*** Admin be user is not yet created. run sql below for this last detail.  
+
+```
+INSERT INTO be_users (uid, pid, tstamp, username, password, admin, usergroup, disable, starttime, endtime, lang, email, db_mountpoints, options, crdate, cruser_id, realName, userMods, allowed_languages, uc, file_mountpoints, fileoper_perms, workspace_perms, lockToDomain, disableIPlock, deleted, TSconfig, lastlogin, createdByAction, usergroup_cached_list, workspace_id, workspace_preview)     VALUES        (1, 0, 1359729780, 'admin', md5('password'), 1, '', 0, 0, 0, '', '', '', 0, 0, 0, '', '', '', '', '', 0, 1, '', 0, 0, NULL, 0, 0, '', 0, 1);
+```
+
 
 When the scripts has finished point your browser ```http://yourhost.com/web/dummy``` or ```http://yourhost.com/web/dummy/typo3```. You can now use your fresh vanilla TYPO3
 

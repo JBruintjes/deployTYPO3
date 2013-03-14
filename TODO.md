@@ -3,7 +3,7 @@ To Do list for deployTYPO3
 
 Next and first official Version
 -------------------------------
-
+* Create admin be user from configuration
 
 
 Next Version
