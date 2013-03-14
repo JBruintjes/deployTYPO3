@@ -121,7 +121,7 @@ Please report issues and pull-requests at [https://github.com/Lingewoud/deployTY
 
 Credits
 =======
-* The superb TYPO3 community
+* The superb [TYPO3](http://www.typo.org) project with it's [smart community](https://typo3.org/community/)
 
 Copyright and license
 =====================
