@@ -48,7 +48,7 @@ time = Time.new
 
 deploymentName = CONFIG['deploymentName']
 
-currentVersion = CONFIG['typo3']['version'] 
+currentVersion = CONFIG['typo3']['t3version'] 
 if currentVersion[0].to_i > 4
 	currentDummy = 'dummy-allversions6plus'
 	currentDummy = 'dummy-allversions'
@@ -80,12 +80,60 @@ $extList = []
 task :default => :help
 
 desc 'desc: do a complete purge and install'
-task :t3_install => [:rmdirStruct, :dirStruct, :conf_init, :getTarballs ,:unpackt3, :ext_bundles_get, :linkExtBundles, :ext_singles_get,:linkExtSingles, :insertInitConf, :env_touchinst]
+task :t3_install => [:rmdirStruct, :dirStruct, :conf_init, :getTarballs ,:unpackt3, :ext_bundles_get, :linkExtBundles, :ext_singles_get,:linkExtSingles, :insertInitConf, :env_touchinst, :db_install]
 
 desc 'desc: generates a config.yml'
 task :conf_init do
-	p "ARGS"
-	p "DO"
+	err = Array.new
+
+	if ENV['t3version'].nil?
+		err << 'ERROR: you must enter a typo3 version. Enter rake t3_versions to list all available versions'
+	end
+
+	if ENV['sitename'].nil?
+		err << 'ERROR: no sitename entered'
+	end
+
+	if ENV['dbname'].nil?
+		err << 'ERROR: no database name entered use dbname=yourdbname'
+	end
+
+	if ENV['dbuser'].nil?
+		err << 'ERROR: no database user entered use dbuser=user'
+	end
+
+	if ENV['dbpass'].nil?
+		err << 'ERROR: no database password entered use dbpass=password'
+	end
+
+	if ENV['dbhost'].nil?
+		err << 'ERROR: no database host entered use dbhost=localhost'
+	end
+
+	if !err.empty?  
+		err.each do |msg|
+			print msg
+			print "\n"
+		end
+		print "\n"
+		print "Usage:\n"
+		print "rake conf_init sitename=SiteName t3version=4.x.x dbname=database dbuser=username dbpass=password dbhost=hostname"
+		print "\n"
+		print "\n"
+		exit
+	end
+
+	print "Creating your initial config.yml\n"
+	print "\n"
+
+	text = File.read('config/config.sample.yml')
+	text = text.gsub(/deploymentName:\ .*/, "deploymentName: "+ENV['sitename'])
+	text = text.gsub(/t3version:\ .*/, "t3version: "+ENV['t3version'])
+	text = text.gsub(/dbname:\ .*/, "dbname: "+ENV['dbname'])
+	text = text.gsub(/dbuser:\ .*/, "dbuser: "+ENV['dbuser'])
+	text = text.gsub(/dbpass:\ .*/, "dbpass: "+ENV['dbpass'])
+	text = text.gsub(/dbhost:\ .*/, "dbhost: "+ENV['dbhost'])
+	File.open('config/config.yml', "w") {|file| file.puts text}
 end
 
 desc 'desc: upgrade to newer version'
@@ -134,7 +182,7 @@ task :ext_singles_get do
 					
 					srcurl ='typo3.org'
 					p hash
-					srcpath = '/extensions/repository/download/'+key+'/'+hash['version']+'/t3x/'
+					srcpath = '/extensions/repository/download/'+key+'/'+hash['t3version']+'/t3x/'
 					destpath = File.join(extSinglesDir,key+'.t3x')
 
 					downloadTo(srcurl,srcpath,destpath)

@@ -4,10 +4,15 @@
 # Place all environment configfuration values here #
 ####################################################
 
-deploymentName: example.com
+deploymentName: nil
 typo3:
-    # show all versions with rake t3versions
-    version: 4.7.9
+    # show all versions with rake t3_versions
+    t3version: nil
+
+    dbname: nil
+    dbuser: nil
+    dbpass: nil
+    dbhost: nil
 
     # Choose one of the sourceforge mirrors:
     # North America:        iweb, superb-sea2, voxel, cdnetworks-us-1, cdnetworks-us-2
@@ -17,11 +22,6 @@ typo3:
     # Asia:                 jaist, ncu, nchc, cdnetworks-kr-1, cdnetworks-kr-2,
     # Africa:               tenet    
     sfmirror: netcologne
-
-    dbname: lingewoudsql1
-    dbuser: lingewoudsql1
-    dbpass: test
-    dbhost: localhost
 
     sysExtList: 
        - version
