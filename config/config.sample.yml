@@ -87,6 +87,13 @@ extSingles:
 TYPO3_CONF_VARS_SYS:
    sitename: My TYPO3 Site
 
+beuser:
+   admin:
+      username: admin
+      password: password
+      admin: true
+      email: admin@mysite.com
+
 TYPO3_CONF_VARS_EXT:
    extConf:
       p3core_refx:

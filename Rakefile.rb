@@ -774,7 +774,6 @@ task :db_install do
 		  f.puts $sqlFiles.map{|s| IO.read(s)} 
 	}
 
-
 	### temporary install needed extensions
 	conffilename = 'web/dummy/typo3conf/localconf.php'
 	appendCode = """
@@ -806,6 +805,9 @@ $TYPO3_CONF_VARS['EXT']['extList'] .= ',lsd_deployt3iu,extbase';
 	File.open('web/dummy/typo3/init.php', "w") {|file| file.puts text}
 
 	cmd="web/dummy/typo3/cli_dispatch.phpsh lsd_deployt3iu compileSQL -f #{File.dirname(__FILE__)}/joined.sql"
+	system(cmd)
+
+	cmd="web/dummy/typo3/cli_dispatch.phpsh lsd_deployt3iu add_beuser -u admin -p password -a 1 -e admin@mysite.com"
 	system(cmd)
 
 	###### restore init.php security
