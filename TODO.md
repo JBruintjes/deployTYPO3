@@ -1,17 +1,9 @@
 To Do list for deployTYPO3
 ==========================
 
-Next and first official Version
--------------------------------
-* Create admin be user from configuration
-
-
 Next Version
 -------------------------------
-* A working [vagrant-deployTYPO3](https://github.com/Lingewoud/vagrant-deployTYPO3)
-	* all needed chef-cookbooks 
-	* webapp methode
-	* chef-DeployTYPO3
+
 * All config-options wel documented
 * Unit testing and CI at travis
 * Reorganized and renamed lsd_deploytypo3iu
@@ -21,7 +13,6 @@ Next Version
 
 Planned
 -------
-* BE Users install
 * Pagetree modifications
 * TS modifications
 * Automatic Recipe extraction from running environments
