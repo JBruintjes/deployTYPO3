@@ -24,6 +24,7 @@ typo3:
     sfmirror: netcologne
 
     sysExtList: 
+       - cms
        - version
  #      - tsconfig_help
  #      - context_help
@@ -70,17 +71,16 @@ extSingles:
    templavoila:
       type: ter # git/svn/ter/t3x/zip/?                           # ter/git only implemented
       uri: templavoila
-      ref: >= 1.8.0 # =/>=/latest                                 # not implemented yet
       version: 1.8.0
    cc_textfunc:
       type: git
       uri: https://github.com/mipmip/cc_textfunc.git
    static_info_tables:
-      type: ter # git/svn/ter/t3x/zip/?                           # ter/git only implemented
+      type: ter 
       uri: static_info_tables
       version: 2.3.1
    dam:
-      type: ter # git/svn/ter/t3x/zip/?                           # ter/git only implemented
+      type: ter
       uri: dam
       version: 1.3.1
 

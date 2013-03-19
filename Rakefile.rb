@@ -34,6 +34,8 @@ require 'rss/2.0'
 require 'open-uri'
 require 'net/http'
 
+Dir.glob('lib/tasks/*.rake').each { |r| import r }
+
 if File.file?("config/config.yml")
 	CONFIG = YAML::load(File.open("config/config.yml"))
 else
@@ -47,6 +49,7 @@ trackedPaths = CONFIG['trackedPaths']
 time = Time.new
 
 deploymentName = CONFIG['deploymentName']
+@deploymentName = CONFIG['deploymentName']
 
 currentVersion = CONFIG['typo3']['t3version'] 
 if currentVersion[0].to_i > 4
@@ -644,19 +647,6 @@ task :setdatabasetest do
 	setLocalconfDbSettings('dbname','user','password','host')
 end
 
-desc 'desc: make link a dir lower indicating this is live'
-task :env_livelink do
-
-	if(!deploymentName)
-		deploymentName = 'noName-please-configure'
-	end
-
-	rmsymlink('../TYPO3Live-'+deploymentName)
-
-	print "symlink this as live environment"
-	print "\n"
-	system('ln -sf ' + Dir.pwd + ' ' + File.join("..",'TYPO3Live-'+deploymentName))
-end
 
 desc 'desc: append configured php code to configured files, usefull for overriding modules configurations'
 task :patch_append_php do
@@ -697,19 +687,6 @@ task :defaultSiteRootFiles do
 	print "\n"
 end
 
-desc 'desc: echo cron confguration'
-task :env_cron do
-
-	livePath = File.expand_path(File.join(Dir.pwd,"..",'TYPO3Live-'+deploymentName))
-
-	print "CRON SCHEDULAR CONFIGURATION"
-	print "\n"
-	print '*/5 * * * * root '+livePath+'/web/dummy/typo3/cli_dispatch.phpsh scheduler'
-	print "\n"
-	print "echo '*/5 * * * * root "+livePath+"/web/dummy/typo3/cli_dispatch.phpsh scheduler' > /etc/cron.d/typo3-"+deploymentName
-	print "\n"
-
-end
 
 desc 'desc: show available TYPO3 versions'
 task :t3_versions do
