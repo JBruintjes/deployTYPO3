@@ -1,8 +1,8 @@
 To Do list for deployTYPO3
 ==========================
 
-Next Version
--------------------------------
+Planned
+-------
 
 * All config-options wel documented
 * Unit testing and CI at travis
@@ -10,20 +10,12 @@ Next Version
 * create ext_emconf.php files
 * Git flow
 	* Next version task
-
-Planned
--------
 * Pagetree modifications
 * TS modifications
 * Automatic Recipe extraction from running environments
-* Extension dependancy resolver
 * Extension version pinning
 * Add ```rake task help``` everywhere
 * Use nice green colors
-* Devide in differce rake class files
-
-Tasks List Prototyping
-======================
 
 depreciated
 -----------
