@@ -16,9 +16,9 @@ describe Typo3Helper do
 			Typo3Helper.get_typo3_versions.should include("4.7.1")
 		end
 
-		it "should return a string not including 9.7.1" do
-			Typo3Helper.get_typo3_versions.should_not include("9.7.1")
-		end
+		#it "should return a string not including 9.7.1" do
+		#	Typo3Helper.get_typo3_versions.should_not include("9.7.1")
+		#end
 
 	end
 end
