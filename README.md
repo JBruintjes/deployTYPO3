@@ -6,37 +6,7 @@ Toolkit for automating clean TYPO3 installs based on recipes. DeployTYPO3 also
 helps you maintain existing TYPO3 environments.
 
 Created and maintained by [Pim Snel](https://github.com/mipmip).
-Sponsored by [PAS3](http://www.pas3.com).
-
-## QuickStart 1
-
-1. Create MySQL database.
-2. On your Unix machine in your webdirectory enter the following commands:
-
-```
-git clone git://github.com/Lingewoud/deployTYPO3.git
-cd deployTYPO3
-
-#rake conf_init sitename=[Site Name] t3version=[4.x.x] dbname=[database] dbuser=[username] dbpass=[password] dbhost=[hostname]
-
-# e.g.
-rake conf_init sitename=MySite t3version=4.7.9 dbname=lingewoudsql1 dbuser=lingewoudsql1 dbpass=test dbhost=localhost
-
-rake t3_install
-```
-
-***NOTE*** Admin be user is not yet created. run sql below for this last detail.  
-
-```
-INSERT INTO be_users (uid, pid, tstamp, username, password, admin, usergroup, disable, starttime, endtime, lang, email, db_mountpoints, options, crdate, cruser_id, realName, userMods, allowed_languages, uc, file_mountpoints, fileoper_perms, workspace_perms, lockToDomain, disableIPlock, deleted, TSconfig, lastlogin, createdByAction, usergroup_cached_list, workspace_id, workspace_preview)     VALUES        (1, 0, 1359729780, 'admin', md5('password'), 1, '', 0, 0, 0, '', '', '', 0, 0, 0, '', '', '', '', '', 0, 1, '', 0, 0, NULL, 0, 0, '', 0, 1);
-```
-
-
-When the scripts has finished point your browser ```http://yourhost.com/web/dummy``` or ```http://yourhost.com/web/dummy/typo3```. You can now use your fresh vanilla TYPO3
-
-## Quickstart 2
-
-We are creating a fully functional vagrant/chef-solo example. Read further instructions here: [https://github.com/Lingewoud/vagrant-deployTYPO3](https://github.com/Lingewoud/vagrant-deployTYPO3).
+Sponsored by [PAS3](http://www.pas3.com) and [Lingewoud](http://www.lingewoud.com).
 
 ## Features
 
@@ -63,6 +33,40 @@ We are creating a fully functional vagrant/chef-solo example. Read further instr
 * Enables smart continues integration
 * Designed for vagrant and chef integration
 
+## QuickStart 1
+
+On your Unix machine in your webdirectory enter the following commands:
+
+```
+# Create a MySQL database.
+
+mysqladmin create typo3_db -uroot -p
+
+# clone deployTYPO3 into your webdirectory
+cd /var/www
+git clone git://github.com/Lingewoud/deployTYPO3.git
+cd deployTYPO3
+
+# Create an initial config.yml file that will be your TYPO3 recipe.
+# 
+# rake conf_init
+#  usage: 
+#  rake conf_init sitename=[Site Name] t3version=[4.x.x] dbname=[database] dbuser=[username] dbpass=[password] dbhost=[hostname]
+#
+# e.g.
+rake conf_init sitename=MySite t3version=4.7.9 dbname=typo3_db dbuser=typo3_db dbpass=test dbhost=localhost
+
+rake t3:install
+```
+
+***NOTE*** For now by default an admin BE-user is created with username ```admin``` and password ```password```
+
+When the scripts has finished point your browser ```http://yourhost.com/web/dummy``` or ```http://yourhost.com/web/dummy/typo3```. You can now use your fresh vanilla TYPO3
+
+## Quickstart 2
+
+We are developing a fully functional vagrant/chef-solo example. Read further instructions here: [https://github.com/Lingewoud/vagrant-deployTYPO3](https://github.com/Lingewoud/vagrant-deployTYPO3).
+
 ## Limitations
 
 * No support yet fot TYPO3 6.x.x
@@ -80,7 +84,7 @@ Enter ```rake help``` for an up to date list of most important commands
 
 ```
 $ rake help
-(in /Users/pim/deployTYPO3)
+(in /var/www/deployTYPO3)
 Using sample configuration, please replace with your own
 
 rake conf_init          # desc: generates a config.yml
