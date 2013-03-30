@@ -86,31 +86,29 @@ $ rake help
 (in /Users/pim/deployTYPO3)
 Using sample configuration, please replace with your own
 
-(in /Users/pim/deployTYPO3)
-Using sample configuration, please replace with your own
 rake conf_init          # desc: generates a config.yml
-rake db_backup          # desc: active database to sql-file
-rake db_copy            # desc: copy complete database structure and schema to a new database.
-rake db_flush           # desc: delete all tables
-rake db_install         # desc: Install all SQL files
-rake db_showtables      # desc: show all tables
-rake env_copy           # desc: copy complete typo3 environment including deployment scripts and database
-rake env_cron           # desc: echo cron confguration
-rake env_flush_cache    # desc: remove typo3conf cache & temp files
-rake env_info           # desc: Show main TYPO3 configured settings
-rake env_livelink       # desc: make link a dir lower indicating this is live
-rake env_purge          # desc: purges all typo3 files and extensions.
-rake env_relink         # desc: relink extension bundles and extensions
-rake env_touchinst      # desc: Create a file web/dummy/typo3conf/ENABLE_INSTALL_TOOL
-rake env_upgrade_src    # desc: upgrade to newer version
-rake ext_bundles_get    # desc: Download all new extension bundles defined in config.yml
-rake ext_bundles_purge  # desc: purge all extBundles
-rake ext_singles_get    # desc: download all single extensions defined in config.yml
-rake ext_singles_purge  # desc: purge all extSingles
+rake db:backup          # desc: active database to sql-file
+rake db:copy            # desc: copy complete database structure and schema to a new database.
+rake db:flush           # desc: delete all tables
+rake db:install         # desc: Install all SQL files
+rake db:showtables      # desc: show all tables
+rake env:copy           # desc: copy complete typo3 environment including deployment scripts and database
+rake env:cron           # desc: echo cron confguration
+rake env:flush_cache    # desc: remove typo3conf cache & temp files
+rake env:info           # desc: Show main TYPO3 configured settings
+rake env:livelink       # desc: make link a dir lower indicating this is live
+rake env:purge          # desc: purges all typo3 files and extensions.
+rake env:relink         # desc: relink extension bundles and extensions
+rake env:touchinst      # desc: Create a file web/dummy/typo3conf/ENABLE_INSTALL_TOOL
+rake env:upgrade_src    # desc: upgrade to newer version
+rake ext:bundles_get    # desc: Download all new extension bundles defined in config.yml
+rake ext:bundles_purge  # desc: purge all extBundles
+rake ext:singles_get    # desc: download all single extensions defined in config.yml
+rake ext:singles_purge  # desc: purge all extSingles
 rake help               # desc: show main tasks
 rake patch_append_php   # desc: append configured php code to configured files, usefull for overriding modules configurations
-rake t3_install         # desc: do a complete purge and install
-rake t3_versions        # desc: show available TYPO3 versions
+rake t3:install         # desc: do a complete purge and install of the TYPO3 environment
+rake t3:versions        # desc: show available TYPO3 versions
 
 DeployTYPO3 version 1.5
 ```
