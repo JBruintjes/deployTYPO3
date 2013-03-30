@@ -1,5 +1,5 @@
 =begin
- 
+
  Commandline Toolbox for TYPO3 administrator and developers made with Rake. 
 
  (C) 2013 Lingewoud BV <pim@lingewoud.nl>
@@ -34,6 +34,8 @@ require 'rss/2.0'
 require 'open-uri'
 require 'net/http'
 
+require 'lib/typo3_helper'
+
 Dir.glob('lib/tasks/*.rake').each { |r| import r }
 
 if File.file?("config/config.yml")
@@ -49,7 +51,7 @@ trackedPaths = CONFIG['trackedPaths']
 time = Time.new
 
 deploymentName = CONFIG['deploymentName']
-@deploymentName = CONFIG['deploymentName']
+$deploymentName = CONFIG['deploymentName']
 
 currentVersion = CONFIG['typo3']['t3version'] 
 if currentVersion[0].to_i > 4
@@ -82,15 +84,12 @@ $extList = []
 
 task :default => :help
 
-desc 'desc: do a complete purge and install'
-task :t3_install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, :env_localconf_gen, :ext_bundles_get, :linkExtBundles, :ext_singles_get,:linkExtSingles, :insertInitConf, :env_touchinst, :db_install]
-
 desc 'desc: generates a config.yml'
 task :conf_init do
 	err = Array.new
 
 	if ENV['t3version'].nil?
-		err << 'ERROR: you must enter a typo3 version. Enter rake t3_versions to list all available versions'
+		err << 'ERROR: you must enter a typo3 version. Enter rake t3:versions to list all available versions'
 	end
 
 	if ENV['sitename'].nil?
@@ -139,14 +138,15 @@ task :conf_init do
 	File.open('config/config.yml', "w") {|file| file.puts text}
 end
 
-task :env_localconf_gen do
-	#TODO
-	#check db is set
-	#else ignore
+namespace :env do
+	task :localconf_gen do
+		#TODO
+		#check db is set
+		#else ignore
 
-	print "Generating initial localconf.php\n"
-	filename = 'web/dummy/typo3conf/localconf.php'
-	appendCode = """
+		print "Generating initial localconf.php\n"
+		filename = 'web/dummy/typo3conf/localconf.php'
+		appendCode = """
 # deployTYPO3 was here #
 # read more about it: https://github.com/Lingewoud/deployTYPO3 
 
@@ -154,37 +154,159 @@ $typo_db_username = '#{CONFIG['typo3']['dbuser']}';   	//  Modified or inserted 
 $typo_db_password = '#{CONFIG['typo3']['dbpass']}';   	// Modified or inserted by deployTYPO3
 $typo_db_host = '#{CONFIG['typo3']['dbhost']}';    		//  Modified or inserted by deployTYPO3
 $typo_db = '#{CONFIG['typo3']['dbname']}';				//  Modified or inserted by deployTYPO3
-	"""
-		
-	if File.file?(filename) 
-		last_line = 0
-		file = File.open(filename, 'r+')
-		file.each { last_line = file.pos unless file.eof? }
-		file.seek(last_line, IO::SEEK_SET)
-		file.write(appendCode)
-		file.write("?>")
-		file.close
-	else
-		print "file does not exist: "+	filename + "\n"
+		"""
+
+		if File.file?(filename) 
+			last_line = 0
+			file = File.open(filename, 'r+')
+			file.each { last_line = file.pos unless file.eof? }
+			file.seek(last_line, IO::SEEK_SET)
+			file.write(appendCode)
+			file.write("?>")
+			file.close
+		else
+			print "file does not exist: "+	filename + "\n"
+		end
+
+		#	$TYPO3_CONF_VARS['EXT']['extList'] .= ',lsd_deployt3iu,extbase';
+		#	flush_cache
+		Rake::Task["env:flush_cache"].invoke
 	end
 
-	#	$TYPO3_CONF_VARS['EXT']['extList'] .= ',lsd_deployt3iu,extbase';
-	#	env_flush_cache
-	Rake::Task[:env_flush_cache].invoke
+	desc 'desc: upgrade to newer version'
+	task :upgrade_src do
+
+		upgradingSrc = true
+
+		Rake::Task[:getTarballs].invoke
+		Rake::Task[:unpackt3].invoke
+		Rake::Task["env:relink"].invoke
+
+		print "todo: backup localconf, trackedPaths, install, restore localconf, trackedPaths"
+		print "\n"
+	end
+
+
+	desc 'desc: relink extension bundles and extensions'
+	task :relink => [:rmExtSymlinks, :linkExtBundles, :linkExtSingles, :linkDummy, :linkTypo3Fix]
+
+
+	desc 'desc: Create a file web/dummy/typo3conf/ENABLE_INSTALL_TOOL'
+	task :touchinst do
+		p "creating ENABLE_INSTALL_TOOL"
+
+		system('touch web/'+currentDummydir+'/typo3conf/ENABLE_INSTALL_TOOL')
+	end
+
+	desc 'desc: Show main TYPO3 configured settings'
+	task :info do
+		dbsetarr = getDbSettings()
+
+		print "\n"
+		print "TYPO3 Version: "+currentVersion 
+		print "\n"
+		print "Docroot directory: "+ FileUtils.pwd + '/web/' + currentDummydir
+		print "\n"
+		print 'Database: ' + dbsetarr[3]
+		print "\n"
+		print 'Host: ' + dbsetarr[2]
+		print "\n"
+		print 'User: ' + dbsetarr[0]
+		print "\n"
+		print 'Password: ' + dbsetarr[1]
+		print "\n"
+		print "\n"
+	end
+
+	desc 'desc: remove typo3conf cache & temp files'
+	task :flush_cache do
+		p "removing cache files"
+		system("rm -Rf web/dummy/typo3temp/*")
+		p "truncating typo3temp"
+		system("rm web/dummy/typo3conf/temp_CACHED_*")
+	end
+
+	desc 'desc: purges all typo3 files and extensions. Only leaving this script and your config.yml'
+	task :purge do
+		print "remove complete typo3 deployment? Enter YES to confirm: " 
+		cleanConfirm = STDIN.gets.chomp
+		if(cleanConfirm.downcase=='yes')
+			system('rm -Rf web trackedPaths typo3source extBundles '+rootFilesBundlesDir)
+		end
+	end
+
+	desc 'desc: copy complete typo3 environment including deployment scripts and database'
+	task :copy do
+		err = Array.new
+
+		if ENV['destpath'].nil?
+			err << 'ERROR: no destination path entered use dest=/newpath'
+		end
+
+		if ENV['destdbname'].nil?
+			err << 'ERROR: no destination database name entered use destdbname=dbname'
+		end
+
+		if ENV['destdbuser'].nil?
+			err << 'ERROR: no destination database username entered use destdbuser=user'
+		end
+
+		if ENV['destdbpass'].nil?
+			err << 'ERROR: no destination database password entered use destdbpass=password'
+		end
+
+		#	if ENV['destdbhost'].nil?
+		#		dbhost=
+		#		err << 'ERROR: no destination database host entered use destdbhost=hostaddress'
+		#	end
+
+		if !err.empty?  
+			err.each do |msg|
+				print msg
+				print "\n"
+			end
+			print "\n"
+			print "Usage:\n"
+			print "rake env:copy destpath=[/newpath] destdbname=[database] destdbuser=[username] destdbpass=[password]"
+			print "\n"
+			print "\n"
+			print "Example:\n"
+			print "rake env:copy destpath=../typo3copy destdbname=testdb destdbuser=testdbuser destdbpass=testdbpasswordv"
+			print "\n"
+			print "\n"
+			exit
+		end
+
+		print "Enter Mysql Root Password"
+		print "\n"
+		rootdbpass = STDIN.gets.chomp
+
+		dbsetarr = getDbSettings()
+		sourcedatabase = dbsetarr[3]
+
+		#print "Current dir"
+		#system('pwd')
+
+		print "Syncing database"
+		print "\n"
+		system("mysqldump " + sourcedatabase + " -uroot -p"+ rootdbpass +" | mysql -uroot -p"+ rootdbpass +" "+ ENV['destdbname'])
+		print "\n"
+
+		print "Syncing directory\n"
+		system("rsync -av ./ "+ ENV['destpath'] +'/')
+		print "\n"
+		print "Cleaning Cache en Temp directories\n"
+		system("rm -Rf "+ ENV['destpath'] +'/web/dummy/typo3conf/temp*')
+		system("rm -Rf "+ ENV['destpath'] +'/web/dummy/typo3temp/*')
+
+		setLocalconfDbSettings(ENV['destdbname'],ENV['destdbuser'],ENV['destdbpass'], 'localhost', ENV['destpath']+'/web/dummy/typo3conf/'+$localconfFile)
+	end
+
+
 end
 
-desc 'desc: upgrade to newer version'
-task :env_upgrade_src do
 
-	upgradingSrc = true
 
-	Rake::Task[:getTarballs].invoke
-   	Rake::Task[:unpackt3].invoke
-   	Rake::Task[:env_relink].invoke
-
-	print "todo: backup localconf, trackedPaths, install, restore localconf, trackedPaths"
-	print "\n"
-end
 
 desc 'desc: show main tasks'
 task :help do
@@ -197,124 +319,256 @@ task :help do
 
 end
 
-desc 'desc: relink extension bundles and extensions'
-task :env_relink => [:rmExtSymlinks, :linkExtBundles, :linkExtSingles, :linkDummy, :linkTypo3Fix]
 
-desc 'desc: download all single extensions defined in config.yml'
-task :ext_singles_get do
-	if CONFIG['extSingles']
-		print "Downloading single extensions\n"
 
-		if not File.directory?(File.join(extSinglesDir))
-			FileUtils.mkdir extSinglesDir
+namespace :ext do
+
+	desc 'desc: download all single extensions defined in config.yml'
+	task :singles_get do
+		if CONFIG['extSingles']
+			print "Downloading single extensions\n"
+
+			if not File.directory?(File.join(extSinglesDir))
+				FileUtils.mkdir extSinglesDir
+			end
+
+			CONFIG['extSingles'].each {|key,hash|
+
+				if not File.directory?(File.join(extSinglesDir,key))
+					if(hash['type']=='git')
+						system("git clone " + hash['uri'] + " "+ File.join(extSinglesDir,key))
+					end
+					if(hash['type']=='ter')
+
+						srcurl ='typo3.org'
+						p hash
+						srcpath = '/extensions/repository/download/'+key+'/'+hash['version']+'/t3x/'
+						destpath = File.join(extSinglesDir,key+'.t3x')
+
+						downloadTo(srcurl,srcpath,destpath)
+						cmd = '/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php extSingles/'+key+'.t3x '+ ' extSingles/'+key
+						system (cmd)
+
+						FileUtils.rm('extSingles/'+key+'.t3x')
+					end
+				end
+
+			}
+		end
+	end
+
+	desc 'desc: purge all extSingles'
+	task :singles_purge do
+		FileUtils.rm_r extSinglesDir, :force => true  
+	end
+
+	desc 'desc: purge all extBundles'
+	task :bundles_purge do
+		FileUtils.rm_r "extBundles", :force => true  
+	end
+
+	desc 'desc: Download all new extension bundles defined in config.yml'
+	task :bundles_get do
+		print "Downloading all new extension bundles\n"
+
+		if not File.directory?(File.join("extBundles"))
+			FileUtils.mkdir "extBundles"
 		end
 
-		CONFIG['extSingles'].each {|key,hash|
-
-			if not File.directory?(File.join(extSinglesDir,key))
-				if(hash['type']=='git')
-					system("git clone " + hash['uri'] + " "+ File.join(extSinglesDir,key))
+		if(CONFIG['extBundles']) 
+			CONFIG['extBundles'].each {|key,hash|
+				print key
+				if not File.directory?(File.join("extBundles",key))
+					if(hash['type']=='svn')
+						print("svn co " + hash['uri'] + " extBundles/"+ key)
+					end
+					if(hash['type']=='git')
+						system("git clone " + hash['uri'] + " extBundles/"+ key)
+					end
 				end
-				if(hash['type']=='ter')
-					
-					srcurl ='typo3.org'
-					p hash
-					srcpath = '/extensions/repository/download/'+key+'/'+hash['version']+'/t3x/'
-					destpath = File.join(extSinglesDir,key+'.t3x')
+			}
+		end
+	end
 
-					downloadTo(srcurl,srcpath,destpath)
-					cmd = '/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php extSingles/'+key+'.t3x '+ ' extSingles/'+key
-					system (cmd)
 
-					FileUtils.rm('extSingles/'+key+'.t3x')
-				end
+end
+
+
+namespace :db do
+	desc 'desc: active database to sql-file'
+	task :backup do
+		dbsetarr = getDbSettings()
+
+		t = Time.now
+		datetime = t.strftime("%Y-%m-%d-time-%H.%M")   #=> "Printed on 04/09/2003"
+
+		print "Dumping database"
+		print "\n"
+		system("mysqldump " +  dbsetarr[3]  + " -u"+ dbsetarr[0] + " -p"+ dbsetarr[1] +" > "+ dbsetarr[3] + datetime + ".sql")
+		print "\n"
+
+	end
+
+	desc 'desc: delete all tables'
+	task :flush do
+		print "Flush tables in DB? Enter YES to confirm: " 
+		cleanConfirm = STDIN.gets.chomp
+		if(cleanConfirm.downcase=='yes')
+			cmd = "mysql -u#{CONFIG['typo3']['dbuser']} -h#{CONFIG['typo3']['dbhost']} -p#{CONFIG['typo3']['dbpass']} #{CONFIG['typo3']['dbname']} -e \"show tables\" | grep -v Tables_in | grep -v \"+\" | gawk '{print \"drop table \" $1 \";\"}' | mysql -u#{CONFIG['typo3']['dbuser']} -h#{CONFIG['typo3']['dbhost']} -p#{CONFIG['typo3']['dbpass']} #{CONFIG['typo3']['dbname']}"
+			system(cmd)
+		end
+	end
+
+	desc 'desc: show all tables'
+	task :showtables do
+		print "Show tables:" 
+		cmd = "mysql -u#{CONFIG['typo3']['dbuser']} -h#{CONFIG['typo3']['dbhost']} -p#{CONFIG['typo3']['dbpass']} #{CONFIG['typo3']['dbname']} -e \"show tables\""
+		system(cmd)
+	end
+
+	desc 'desc: copy complete database structure and schema to a new database. This db must already exist'
+	task :copy do
+		err = Array.new
+
+		if ENV['destdbname'].nil?
+			err << 'ERROR: no destination database name entered use destdbname=dbname'
+		end
+
+		#	if ENV['destdbuser'].nil?
+		#		err << 'ERROR: no destination database username entered use destdbuser=user'
+		#	end
+
+		#	if ENV['destdbpass'].nil?
+		#		err << 'ERROR: no destination database password entered use destdbpass=password'
+		#	end
+
+		#	if ENV['destdbhost'].nil?
+		#		dbhost=
+		#		err << 'ERROR: no destination database host entered use destdbhost=hostaddress'
+		#	end
+
+		if !err.empty?  
+			err.each do |msg|
+				print msg
+				print "\n"
 			end
+			print "\n"
+			print "Usage:\n"
+			print "rake copy destdbname=[database]"
+			print "\n"
+			print "\n"
+			print "Example:\n"
+			print "rake copy destdbname=testdb"
+			print "\n"
+			print "\n"
+			exit
+		end
 
-		}
+		print "Enter Mysql Root Password"
+		print "\n"
+		rootdbpass = STDIN.gets.chomp
+
+		dbsetarr = getDbSettings()
+		sourcedatabase = dbsetarr[3]
+
+		#print "Current dir"
+		#system('pwd')
+
+		print "Syncing database"
+		print "\n"
+		system("mysqldump " + sourcedatabase + " -uroot -p"+ rootdbpass +" | mysql -uroot -p"+ rootdbpass +" "+ ENV['destdbname'])
+		print "\n"
 	end
-end
 
-desc 'desc: purge all extSingles'
-task :ext_singles_purge do
-	FileUtils.rm_r extSinglesDir, :force => true  
-end
+desc 'desc: Install all SQL files'
+task :install do
 
-desc 'desc: purge all extBundles'
-task :ext_bundles_purge do
-	FileUtils.rm_r "extBundles", :force => true  
-end
-
-desc 'desc: Download all new extension bundles defined in config.yml'
-task :ext_bundles_get do
-	print "Downloading all new extension bundles\n"
-
-	if not File.directory?(File.join("extBundles"))
-		FileUtils.mkdir "extBundles"
+	filename='joined.sql'
+	if File.file?(filename) 
+		FileUtils.rm(filename)
 	end
 
-	if(CONFIG['extBundles']) 
-		CONFIG['extBundles'].each {|key,hash|
-			print key
-			if not File.directory?(File.join("extBundles",key))
-				if(hash['type']=='svn')
-					print("svn co " + hash['uri'] + " extBundles/"+ key)
-				end
-				if(hash['type']=='git')
-					system("git clone " + hash['uri'] + " extBundles/"+ key)
-				end
-			end
-		}
+	$sqlFiles = []
+	$sqlFiles << File.join('web',currentDummydir,"t3lib","stddb","tables.sql") 
+
+	compileExtList
+	$extList.each { | extName |
+		extBase = File.join('web',currentDummydir,"typo3conf","ext") 
+	if CONFIG['typo3']['sysExtList'].include? extName
+		extBase = File.join('web',currentDummydir,"typo3","sysext") 
+	else
+		extBase = File.join('web',currentDummydir,"typo3conf","ext") 
 	end
+
+	extSql = File.join(extBase,extName,"ext_tables.sql") 
+	extSqlStatic = File.join(extBase,extName,"ext_tables_static+adt.sql") 
+	if File.file?(extSql) 
+		$sqlFiles << extSql	
+	end 
+	if File.file?(extSqlStatic) 
+		$sqlFiles << extSqlStatic	
+	end 
+	}
+
+	File.open(filename,"w"){|f|
+		f.puts $sqlFiles.map{|s| IO.read(s)} 
+	}
+
+	### temporary install needed extensions
+	conffilename = 'web/dummy/typo3conf/localconf.php'
+	appendCode = """
+$TYPO3_CONF_VARS['EXT']['extList'] .= ',lsd_deployt3iu,extbase';
+	"""
+
+	if File.file?(conffilename) 
+		last_line = 0
+		file = File.open(conffilename, 'r+')
+		file.each { last_line = file.pos unless file.eof? }
+		file.seek(last_line, IO::SEEK_SET)
+		file.write(appendCode)
+		file.write("?>")
+		file.close
+	else
+		print "file does not exist: "+	conffilename + "\n"
+	end
+
+	#	flush_cache
+	Rake::Task["env:flush_cache"].invoke
+
+	###### init.php security bypass
+	#$BE_USER->checkCLIuser();
+	#$BE_USER->backendCheckLogin();  // Checking if there's a user logged in
+
+	text = File.read('web/dummy/typo3/init.php')
+	text = text.gsub(/^\$BE_USER->checkCLIuser/, "\#$BE_USER->checkCLIuser")
+	text = text.gsub(/^\$BE_USER->backendCheckLogin/, "\#$BE_USER->backendCheckLogin")
+	File.open('web/dummy/typo3/init.php', "w") {|file| file.puts text}
+
+	cmd="web/dummy/typo3/cli_dispatch.phpsh lsd_deployt3iu compileSQL -f #{File.dirname(__FILE__)}/joined.sql"
+	system(cmd)
+
+	cmd="web/dummy/typo3/cli_dispatch.phpsh lsd_deployt3iu add_beuser -u admin -p password -a 1 -e admin@mysite.com"
+	system(cmd)
+
+	###### restore init.php security
+
+	text = File.read('web/dummy/typo3/init.php')
+	text = text.gsub(/^\#\$BE_USER->checkCLIuser/, "$BE_USER->checkCLIuser")
+		text = text.gsub(/^\#\$BE_USER->backendCheckLogin/, "$BE_USER->backendCheckLogin")
+		File.open('web/dummy/typo3/init.php', "w") {|file| file.puts text}
+
+	text = File.read(conffilename)
+	text = text.gsub(/^\$TYPO3_CONF_VARS\['EXT'\]\['extList'\]\ \.=\ ',lsd_deployt3iu,extbase';/, "")
+	File.open(conffilename, "w") {|file| file.puts text}
+
+	#	flush_cache
+	Rake::Task["env:flush_cache"].invoke
+
 end
 
-desc 'desc: Create a file web/dummy/typo3conf/ENABLE_INSTALL_TOOL'
-task :env_touchinst do
-	p "creating ENABLE_INSTALL_TOOL"
-	
-	system('touch web/'+currentDummydir+'/typo3conf/ENABLE_INSTALL_TOOL')
-end
-
-desc 'desc: Show main TYPO3 configured settings'
-task :env_info do
-	dbsetarr = getDbSettings()
-
-	print "\n"
-	print "TYPO3 Version: "+currentVersion 
-	print "\n"
-	print "Docroot directory: "+ FileUtils.pwd + '/web/' + currentDummydir
-	print "\n"
-	print 'Database: ' + dbsetarr[3]
-	print "\n"
-	print 'Host: ' + dbsetarr[2]
-	print "\n"
-	print 'User: ' + dbsetarr[0]
-	print "\n"
-	print 'Password: ' + dbsetarr[1]
-	print "\n"
-	print "\n"
-end
-
-desc 'desc: active database to sql-file'
-task :db_backup do
-	dbsetarr = getDbSettings()
-
-	t = Time.now
-	datetime = t.strftime("%Y-%m-%d-time-%H.%M")   #=> "Printed on 04/09/2003"
-
-	print "Dumping database"
-	print "\n"
-	system("mysqldump " +  dbsetarr[3]  + " -u"+ dbsetarr[0] + " -p"+ dbsetarr[1] +" > "+ dbsetarr[3] + datetime + ".sql")
-	print "\n"
 
 end
 
-desc 'desc: remove typo3conf cache & temp files'
-task :env_flush_cache do
-	p "removing cache files"
-	system("rm -Rf web/dummy/typo3temp/*")
-	p "truncating typo3temp"
-	system("rm web/dummy/typo3conf/temp_CACHED_*")
-end
 
 #desc 'copy all trackedPaths to trackedPathsDir for storage in SCM'
 task :trackDown do
@@ -342,9 +596,9 @@ task :getTarballs do
 
 	Net::HTTP.start(sourceUrl) { |http2|
 		resp2 = http2.get(downloadLink)
-			open("typo3source/"+currentSrcTar, "w+") { |file2|
-				file2.write(resp2.body)
-			}
+		open("typo3source/"+currentSrcTar, "w+") { |file2|
+			file2.write(resp2.body)
+		}
 	}
 
 end
@@ -367,40 +621,16 @@ task :unpackt3 do
 	end
 
 	system('tar xzf typo3source/typo3_src-'+currentVersion+'.tar.gz -C web/')
-#	system('rm '+ File.join("web",currentDummydir,'typo3_src'))
-#	p 'ln -sf '+ File.join("web",currentDummydir,'typo3_src') +' ../typo3_src-'+currentVersion
+	#	system('rm '+ File.join("web",currentDummydir,'typo3_src'))
+	#	p 'ln -sf '+ File.join("web",currentDummydir,'typo3_src') +' ../typo3_src-'+currentVersion
 	system('ln -sf ../typo3_src-'+currentVersion + ' '+ File.join("web",currentDummydir,'typo3_src'))
-#	system('mv web/'+currentDummydir + "/ web/"+currentDummydir + "-bak-"+time.year.to_s+'-'+time.month.to_s+'-'+time.day.to_s+'-'+time.hour.to_s+'.'+time.min.to_s)
+	#	system('mv web/'+currentDummydir + "/ web/"+currentDummydir + "-bak-"+time.year.to_s+'-'+time.month.to_s+'-'+time.day.to_s+'-'+time.hour.to_s+'.'+time.min.to_s)
 
 	#File.symlink( "web/"+currentDummydir+"/typo3", "../typo3") 
 	#system('chmod -Rf 777 web/' + currentDummydir)
 end
 
-desc 'desc: purges all typo3 files and extensions. Only leaving this script and your config.yml'
-task :env_purge do
-	print "remove complete typo3 deployment? Enter YES to confirm: " 
-	cleanConfirm = STDIN.gets.chomp
-	if(cleanConfirm.downcase=='yes')
-		system('rm -Rf web trackedPaths typo3source extBundles '+rootFilesBundlesDir)
-	end
-end
 
-desc 'desc: delete all tables'
-task :db_flush do
-	print "Flush tables in DB? Enter YES to confirm: " 
-	cleanConfirm = STDIN.gets.chomp
-	if(cleanConfirm.downcase=='yes')
-		cmd = "mysql -u#{CONFIG['typo3']['dbuser']} -h#{CONFIG['typo3']['dbhost']} -p#{CONFIG['typo3']['dbpass']} #{CONFIG['typo3']['dbname']} -e \"show tables\" | grep -v Tables_in | grep -v \"+\" | gawk '{print \"drop table \" $1 \";\"}' | mysql -u#{CONFIG['typo3']['dbuser']} -h#{CONFIG['typo3']['dbhost']} -p#{CONFIG['typo3']['dbpass']} #{CONFIG['typo3']['dbname']}"
-		system(cmd)
-	end
-end
-
-desc 'desc: show all tables'
-task :db_showtables do
-	print "Show tables:" 
-	cmd = "mysql -u#{CONFIG['typo3']['dbuser']} -h#{CONFIG['typo3']['dbhost']} -p#{CONFIG['typo3']['dbpass']} #{CONFIG['typo3']['dbname']} -e \"show tables\""
-	system(cmd)
-end
 
 task :linkTypo3Fix do
 	print "symlink typo3 fix"
@@ -418,24 +648,24 @@ task :linkExtBundles do
 
 	extDest = File.join('web',currentDummydir,"typo3conf","ext") 
 
-	   Dir.foreach(File.join("extBundles")) {|rdir| 
-		   if checkValidDir(rdir) and File.directory?(File.join("extBundles",rdir))
-			   p "In Extension Bundle #{rdir}"
+	Dir.foreach(File.join("extBundles")) {|rdir| 
+		if checkValidDir(rdir) and File.directory?(File.join("extBundles",rdir))
+			p "In Extension Bundle #{rdir}"
 
-			   Dir.foreach(File.join("extBundles",rdir)) {|sdir| 
-				   if checkValidDir(sdir) and File.directory?(File.join("extBundles",rdir,sdir))
-					   source = File.join("..","..","..","..","extBundles",rdir,sdir) 
+			Dir.foreach(File.join("extBundles",rdir)) {|sdir| 
+				if checkValidDir(sdir) and File.directory?(File.join("extBundles",rdir,sdir))
+					source = File.join("..","..","..","..","extBundles",rdir,sdir) 
 
-					   system("ln -sf " + source + " " +extDest)
-					   p "ln -sf " + source + " " +extDest
-					   
-				   end
-			   }
-		   end
-	   }
+					system("ln -sf " + source + " " +extDest)
+					p "ln -sf " + source + " " +extDest
 
-	   #todo add removing broken symlinks with command below
-	   #for i in `find ./ -type l`; do [ -e $i ] || echo $i is broken; done
+				end
+			}
+		end
+	}
+
+	#todo add removing broken symlinks with command below
+	#for i in `find ./ -type l`; do [ -e $i ] || echo $i is broken; done
 end
 
 task :linkDummy do
@@ -516,132 +746,13 @@ task :insertInitConf do
 end
 
 task :generateConf do
-#compile extList, all sysExt, plus all extBundles/ext's, plus all extSingles  
+	#compile extList, all sysExt, plus all extBundles/ext's, plus all extSingles  
 	#sysextlist + contents of extBundles and extSingles
-compileExtList
-p $extList
+	compileExtList
+	p $extList
 end
 
-desc 'desc: copy complete typo3 environment including deployment scripts and database'
-task :env_copy do
-	err = Array.new
 
-	if ENV['destpath'].nil?
-		err << 'ERROR: no destination path entered use dest=/newpath'
-	end
-
-	if ENV['destdbname'].nil?
-		err << 'ERROR: no destination database name entered use destdbname=dbname'
-	end
-
-	if ENV['destdbuser'].nil?
-		err << 'ERROR: no destination database username entered use destdbuser=user'
-	end
-
-	if ENV['destdbpass'].nil?
-		err << 'ERROR: no destination database password entered use destdbpass=password'
-	end
-
-#	if ENV['destdbhost'].nil?
-#		dbhost=
-#		err << 'ERROR: no destination database host entered use destdbhost=hostaddress'
-#	end
-
-	if !err.empty?  
-		err.each do |msg|
-			print msg
-			print "\n"
-		end
-		print "\n"
-		print "Usage:\n"
-		print "rake env_copy destpath=[/newpath] destdbname=[database] destdbuser=[username] destdbpass=[password]"
-		print "\n"
-		print "\n"
-		print "Example:\n"
-		print "rake env_copy destpath=../typo3copy destdbname=testdb destdbuser=testdbuser destdbpass=testdbpasswordv"
-		print "\n"
-		print "\n"
-		exit
-	end
-
-	print "Enter Mysql Root Password"
-	print "\n"
-	    rootdbpass = STDIN.gets.chomp
-
-	dbsetarr = getDbSettings()
-	sourcedatabase = dbsetarr[3]
-
-	#print "Current dir"
-	#system('pwd')
-
-	print "Syncing database"
-	print "\n"
-	system("mysqldump " + sourcedatabase + " -uroot -p"+ rootdbpass +" | mysql -uroot -p"+ rootdbpass +" "+ ENV['destdbname'])
-	print "\n"
-
-	print "Syncing directory\n"
-	system("rsync -av ./ "+ ENV['destpath'] +'/')
-	print "\n"
-	print "Cleaning Cache en Temp directories\n"
-	system("rm -Rf "+ ENV['destpath'] +'/web/dummy/typo3conf/temp*')
-	system("rm -Rf "+ ENV['destpath'] +'/web/dummy/typo3temp/*')
-
-	setLocalconfDbSettings(ENV['destdbname'],ENV['destdbuser'],ENV['destdbpass'], 'localhost', ENV['destpath']+'/web/dummy/typo3conf/'+$localconfFile)
-end
-
-desc 'desc: copy complete database structure and schema to a new database. This db must already exist'
-task :db_copy do
-	err = Array.new
-
-	if ENV['destdbname'].nil?
-		err << 'ERROR: no destination database name entered use destdbname=dbname'
-	end
-
-#	if ENV['destdbuser'].nil?
-#		err << 'ERROR: no destination database username entered use destdbuser=user'
-#	end
-
-#	if ENV['destdbpass'].nil?
-#		err << 'ERROR: no destination database password entered use destdbpass=password'
-#	end
-
-#	if ENV['destdbhost'].nil?
-#		dbhost=
-#		err << 'ERROR: no destination database host entered use destdbhost=hostaddress'
-#	end
-
-	if !err.empty?  
-		err.each do |msg|
-			print msg
-			print "\n"
-		end
-		print "\n"
-		print "Usage:\n"
-		print "rake db_copy destdbname=[database]"
-		print "\n"
-		print "\n"
-		print "Example:\n"
-		print "rake db_copy destdbname=testdb"
-		print "\n"
-		print "\n"
-		exit
-	end
-
-	print "Enter Mysql Root Password"
-	print "\n"
-    rootdbpass = STDIN.gets.chomp
-
-	dbsetarr = getDbSettings()
-	sourcedatabase = dbsetarr[3]
-
-	#print "Current dir"
-	#system('pwd')
-
-	print "Syncing database"
-	print "\n"
-	system("mysqldump " + sourcedatabase + " -uroot -p"+ rootdbpass +" | mysql -uroot -p"+ rootdbpass +" "+ ENV['destdbname'])
-	print "\n"
-end
 
 task :setdatabasetest do
 	setLocalconfDbSettings('dbname','user','password','host')
@@ -655,7 +766,7 @@ task :patch_append_php do
 		print 'Append task for: '+key+ "\n"
 		filename = 'web/'+currentDummydir+'/'+valarr['file']
 		appendCode = valarr['appendPHPCode']
-		
+
 		if File.file?(filename) 
 			last_line = 0
 			file = File.open(filename, 'r+')
@@ -665,7 +776,7 @@ task :patch_append_php do
 			file.write("?>")
 			file.close
 		else
-		print "file does not exist: "+	filename + "\n"
+			print "file does not exist: "+	filename + "\n"
 		end
 	}
 
@@ -687,121 +798,17 @@ task :defaultSiteRootFiles do
 	print "\n"
 end
 
+namespace :t3 do
 
-desc 'desc: show available TYPO3 versions'
-task :t3_versions do
+	desc 'desc: do a complete purge and install of the TYPO3 environment'
+	task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, "env:localconf_gen", "ext:bundles_get", :linkExtBundles, "ext:singles_get",:linkExtSingles, :insertInitConf, "env:touchinst", "db:install"]
 
-	source = "http://sourceforge.net/api/file/index/project-id/20391/mtime/desc/rss"
-	content = "" # raw content of rss feed will be loaded here
-	open(source) do |s| content = s.read end
-	rss = RSS::Parser.parse(content, false)
-
-	print "RSS title: ", rss.channel.title, "\n"
-	print "RSS link: ", rss.channel.link, "\n"
-	print "RSS description: ", rss.channel.description, "\n"
-	print "RSS publication date: ", rss.channel.date, "\n"
-
-	puts "Item values"
-	_version_arr= []
-	rss.items.each { |item|
-		if item.title[0,24] =='/TYPO3 Source and Dummy/' 
-			_item = item.title[24,1000].split(/\//)
-			_version_arr << _item[0]
-		end
-	}
-	version_arr = _version_arr.uniq.sort
-	version_arr.each { |v|
-			print "version: ", v, "\n"
-	}
+	desc 'desc: show available TYPO3 versions'
+	task :versions do
+		print Typo3Helper::get_typo3_versions
+	end
 end
 
-desc 'desc: Install all SQL files'
-task :db_install do
-
-
-
-	filename='joined.sql'
-	if File.file?(filename) 
-		FileUtils.rm(filename)
-	end
-
-	$sqlFiles = []
-	$sqlFiles << File.join('web',currentDummydir,"t3lib","stddb","tables.sql") 
-
-	compileExtList
-	$extList.each { | extName |
-	    extBase = File.join('web',currentDummydir,"typo3conf","ext") 
-		if CONFIG['typo3']['sysExtList'].include? extName
-			extBase = File.join('web',currentDummydir,"typo3","sysext") 
-		else
-			extBase = File.join('web',currentDummydir,"typo3conf","ext") 
-		end
-
-		extSql = File.join(extBase,extName,"ext_tables.sql") 
-		extSqlStatic = File.join(extBase,extName,"ext_tables_static+adt.sql") 
-		if File.file?(extSql) 
-			$sqlFiles << extSql	
-		end 
-		if File.file?(extSqlStatic) 
-			$sqlFiles << extSqlStatic	
-		end 
-	}
-
-	File.open(filename,"w"){|f|
-		  f.puts $sqlFiles.map{|s| IO.read(s)} 
-	}
-
-	### temporary install needed extensions
-	conffilename = 'web/dummy/typo3conf/localconf.php'
-	appendCode = """
-$TYPO3_CONF_VARS['EXT']['extList'] .= ',lsd_deployt3iu,extbase';
-	"""
-		
-	if File.file?(conffilename) 
-		last_line = 0
-		file = File.open(conffilename, 'r+')
-		file.each { last_line = file.pos unless file.eof? }
-		file.seek(last_line, IO::SEEK_SET)
-		file.write(appendCode)
-		file.write("?>")
-		file.close
-	else
-		print "file does not exist: "+	conffilename + "\n"
-	end
-
-	#	env_flush_cache
-	Rake::Task[:env_flush_cache].invoke
-
-	###### init.php security bypass
-	#$BE_USER->checkCLIuser();
-	#$BE_USER->backendCheckLogin();  // Checking if there's a user logged in
-
-	text = File.read('web/dummy/typo3/init.php')
-	text = text.gsub(/^\$BE_USER->checkCLIuser/, "\#$BE_USER->checkCLIuser")
-	text = text.gsub(/^\$BE_USER->backendCheckLogin/, "\#$BE_USER->backendCheckLogin")
-	File.open('web/dummy/typo3/init.php', "w") {|file| file.puts text}
-
-	cmd="web/dummy/typo3/cli_dispatch.phpsh lsd_deployt3iu compileSQL -f #{File.dirname(__FILE__)}/joined.sql"
-	system(cmd)
-
-	cmd="web/dummy/typo3/cli_dispatch.phpsh lsd_deployt3iu add_beuser -u admin -p password -a 1 -e admin@mysite.com"
-	system(cmd)
-
-	###### restore init.php security
-
-	text = File.read('web/dummy/typo3/init.php')
-	text = text.gsub(/^\#\$BE_USER->checkCLIuser/, "$BE_USER->checkCLIuser")
-	text = text.gsub(/^\#\$BE_USER->backendCheckLogin/, "$BE_USER->backendCheckLogin")
-	File.open('web/dummy/typo3/init.php', "w") {|file| file.puts text}
-
-	text = File.read(conffilename)
-	text = text.gsub(/^\$TYPO3_CONF_VARS\['EXT'\]\['extList'\]\ \.=\ ',lsd_deployt3iu,extbase';/, "")
-	File.open(conffilename, "w") {|file| file.puts text}
-
-	#	env_flush_cache
-	Rake::Task[:env_flush_cache].invoke
-
-end
 
 def getDbSettings()
 	cmd = "php -r \'include \"web/dummy/typo3conf/"+$localconfFile+"\";echo \"$typo_db_username $typo_db_password $typo_db_host $typo_db\";\'"
@@ -810,7 +817,7 @@ def getDbSettings()
 end
 
 def setLocalconfDbSettings(db,user,pass,host='localhost',outfile='web/dummy/typo3conf/localconf.new.php')
-	
+
 	text = File.read('web/dummy/typo3conf/'+$localconfFile)
 	text = text.gsub(/^\$typo_db_password\ .*/, "$typo_db_password = '"+pass+"'; //set by Deploy TYPO3")
 	text = text.gsub(/^\$typo_db\ .*/, "$typo_db = '"+db+"'; //set by Deploy TYPO3")
@@ -836,9 +843,9 @@ end
 def downloadTo(src_url,src_path,dest_filepath)
 	Net::HTTP.start(src_url) { |http2|
 		resp2 = http2.get(src_path)
-			open(dest_filepath, "w+") { |file2|
-				file2.write(resp2.body)
-			}
+		open(dest_filepath, "w+") { |file2|
+			file2.write(resp2.body)
+		}
 	}
 end
 

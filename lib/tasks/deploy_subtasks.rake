@@ -27,27 +27,27 @@ namespace :env do
 	desc 'desc: make link a dir lower indicating this is live'
 	task :livelink do
 
-		if(!@deploymentName)
-			@deploymentName = 'noName-please-configure'
+		if(!$deploymentName)
+			$deploymentName = 'noName-please-configure'
 		end
 
-		rmsymlink('../TYPO3Live-'+@deploymentName)
+		rmsymlink('../TYPO3Live-'+$deploymentName)
 
 		print "symlink this as live environment"
 		print "\n"
-		system('ln -sf ' + Dir.pwd + ' ' + File.join("..",'TYPO3Live-'+@deploymentName))
+		system('ln -sf ' + Dir.pwd + ' ' + File.join("..",'TYPO3Live-'+$deploymentName))
 	end
 
 	desc 'desc: echo cron confguration'
 	task :cron do
 
-		livePath = File.expand_path(File.join(Dir.pwd,"..",'TYPO3Live-'+@deploymentName))
+		livePath = File.expand_path(File.join(Dir.pwd,"..",'TYPO3Live-'+$deploymentName))
 
 		print "CRON SCHEDULAR CONFIGURATION"
 		print "\n"
 		print '*/5 * * * * root '+livePath+'/web/dummy/typo3/cli_dispatch.phpsh scheduler'
 		print "\n"
-		print "echo '*/5 * * * * root "+livePath+"/web/dummy/typo3/cli_dispatch.phpsh scheduler' > /etc/cron.d/typo3-"+@deploymentName
+		print "echo '*/5 * * * * root "+livePath+"/web/dummy/typo3/cli_dispatch.phpsh scheduler' > /etc/cron.d/typo3-"+$deploymentName
 		print "\n"
 	end
 end
