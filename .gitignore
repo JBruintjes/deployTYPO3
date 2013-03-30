@@ -6,6 +6,7 @@ trackedPaths/
 typo3source/
 extBundles/
 extSingles/
+log/deploytypo3.log
 typo3
 rootFilesBundles/
 .DS_Store

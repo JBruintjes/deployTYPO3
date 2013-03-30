@@ -28,4 +28,97 @@ class Typo3Helper
 		return return_string
 	end
 
+	def self.create_be_users
+
+		self.init_php_security_bypass
+
+		cmd = ''
+		CONFIG['beuser'].each {|k,u|
+			cmd += "web/dummy/typo3/cli_dispatch.phpsh lsd_deployt3iu add_beuser -u #{u['username']} -p #{u['password']} -a #{u['admin']} -e #{u['email']};"
+		}
+
+		system(cmd)
+
+		self.init_php_security_restore
+		
+		return cmd
+		
+	end
+	def self.dt3_helper_extension(action)
+		if action == 'install'
+
+			appendCode = "\n$TYPO3_CONF_VARS['EXT']['extList'] .= ',lsd_deployt3iu,extbase';\n"
+
+			if File.file?(DT3CONST['TYPO3_LOCALCONF_FILE']) 
+				last_line = 0
+				file = File.open(DT3CONST['TYPO3_LOCALCONF_FILE'], 'r+')
+				file.each { last_line = file.pos unless file.eof? }
+				file.seek(last_line, IO::SEEK_SET)
+				file.write(appendCode)
+				file.write("?>")
+				file.close
+			else
+				print "file does not exist: "+	DT3CONST['TYPO3_LOCALCONF_FILE'] + "\n"
+			end
+
+		elsif action == 'uninstall'
+			text = File.read(DT3CONST['TYPO3_LOCALCONF_FILE'])
+			text = text.gsub(/^\$TYPO3_CONF_VARS\['EXT'\]\['extList'\]\ \.=\ ',lsd_deployt3iu,extbase';/, "")
+			File.open(DT3CONST['TYPO3_LOCALCONF_FILE'], "w") {|file| file.puts text}
+		end
+	end
+
+	def	self.compile_joined_sql
+
+		self.init_php_security_bypass
+
+		cmd="web/dummy/typo3/cli_dispatch.phpsh lsd_deployt3iu compileSQL -f #{DT3CONST['ROOTDIR']}/joined.sql"
+		DT3Logger::log('compile_joined_sql',cmd) 
+		system(cmd)
+		
+		self.init_php_security_restore
+		return cmd
+	end
+
+	def self.flush_cache()
+		DT3Logger::log('flush_cache','removing cache files')
+		system("rm -Rf web/dummy/typo3temp/*")
+		DT3Logger::log('flush_cache','truncating typo3temp')
+		system("rm -Rf web/dummy/typo3conf/temp_CACHED_*")
+	end
+
+	def self.init_php_security_bypass
+
+        self.dt3_helper_extension('install')
+
+		#$BE_USER->checkCLIuser();
+		#$BE_USER->backendCheckLogin();  // Checking if there's a user logged in
+
+		text = File.read('web/dummy/typo3/init.php')
+		text = text.gsub(/^\$BE_USER->checkCLIuser/, "\#$BE_USER->checkCLIuser")
+		text = text.gsub(/^\$BE_USER->backendCheckLogin/, "\#$BE_USER->backendCheckLogin")
+		File.open('web/dummy/typo3/init.php', "w") {|file| file.puts text}
+		self.flush_cache
+	end
+
+	def self.init_php_security_restore
+
+		text = File.read('web/dummy/typo3/init.php')
+		text = text.gsub(/^\#\$BE_USER->checkCLIuser/, "$BE_USER->checkCLIuser")
+			text = text.gsub(/^\#\$BE_USER->backendCheckLogin/, "$BE_USER->backendCheckLogin")
+			File.open('web/dummy/typo3/init.php', "w") {|file| file.puts text}
+
+        self.dt3_helper_extension('uninstall')
+		self.flush_cache
+	end
+
+	def	self.get_db_settings()
+		cmd = "php -r \'include \"#{DT3CONST['TYPO3_LOCALCONF_FILE']}\";echo \"$typo_db_username $typo_db_password $typo_db_host $typo_db\";\'"
+
+		dbsettings =%x[ #{cmd} ]
+		return dbsettings.split(' ');
+	end
 end
+
+
+

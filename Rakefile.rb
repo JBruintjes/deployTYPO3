@@ -24,8 +24,6 @@ This copyright notice MUST APPEAR in all copies of the script!
 
 =end
 
-deployTypo3Version = "1.5"
-
 require 'rake'  
 require 'fileutils'  
 require "yaml"
@@ -34,17 +32,17 @@ require 'rss/2.0'
 require 'open-uri'
 require 'net/http'
 
+require 'lib/load_config'
+require 'lib/init_dt3'
+require 'lib/dt3_logger'
 require 'lib/typo3_helper'
 
 Dir.glob('lib/tasks/*.rake').each { |r| import r }
 
-if File.file?("config/config.yml")
-	CONFIG = YAML::load(File.open("config/config.yml"))
-else
-	print "Using sample configuration, please replace with your own"
-	print "\n"
-	CONFIG = YAML::load(File.open("config/config.sample.yml"))
-end
+######## SETTING CONSTANTS
+
+CONFIG =LoadConfig::load_config
+DT3CONST = InitDT3::load_constants
 
 trackedPaths = CONFIG['trackedPaths'] 
 
@@ -79,6 +77,8 @@ trackedPathsDir = File.join("trackedPaths")
 structDirs = [webDir, extBundlesDir, typo3sourceDir, trackedPathsDir, rootFilesBundlesDir]
 
 upgradingSrc = false
+
+#####################################
 
 $extList = []
 
@@ -200,7 +200,7 @@ $typo_db = '#{CONFIG['typo3']['dbname']}';				//  Modified or inserted by deploy
 
 	desc 'desc: Show main TYPO3 configured settings'
 	task :info do
-		dbsetarr = getDbSettings()
+		dbsetarr = Typo3Helper::get_db_settings()
 
 		print "\n"
 		print "TYPO3 Version: "+currentVersion 
@@ -220,10 +220,12 @@ $typo_db = '#{CONFIG['typo3']['dbname']}';				//  Modified or inserted by deploy
 
 	desc 'desc: remove typo3conf cache & temp files'
 	task :flush_cache do
-		p "removing cache files"
-		system("rm -Rf web/dummy/typo3temp/*")
-		p "truncating typo3temp"
-		system("rm web/dummy/typo3conf/temp_CACHED_*")
+
+		Typo3Helper::flush_cache()
+		#p "removing cache files"
+		#system("rm -Rf web/dummy/typo3temp/*")
+		#p "truncating typo3temp"
+		#system("rm web/dummy/typo3conf/temp_CACHED_*")
 	end
 
 	desc 'desc: purges all typo3 files and extensions. Only leaving this script and your config.yml'
@@ -281,7 +283,7 @@ $typo_db = '#{CONFIG['typo3']['dbname']}';				//  Modified or inserted by deploy
 		print "\n"
 		rootdbpass = STDIN.gets.chomp
 
-		dbsetarr = getDbSettings()
+		dbsetarr = Typo3Helper::get_db_settings()
 		sourcedatabase = dbsetarr[3]
 
 		#print "Current dir"
@@ -305,21 +307,16 @@ $typo_db = '#{CONFIG['typo3']['dbname']}';				//  Modified or inserted by deploy
 
 end
 
-
-
-
 desc 'desc: show main tasks'
 task :help do
 	print "\n"
 	system("rake -T")
 	print "\n"
-	print "DeployTYPO3 version " + deployTypo3Version
+	print "DeployTYPO3 version " + DT3CONST['VERSION']
 	print "\n"
 	print "\n"
 
 end
-
-
 
 namespace :ext do
 
@@ -389,15 +386,12 @@ namespace :ext do
 			}
 		end
 	end
-
-
 end
-
 
 namespace :db do
 	desc 'desc: active database to sql-file'
 	task :backup do
-		dbsetarr = getDbSettings()
+		dbsetarr = Typo3Helper::get_db_settings()
 
 		t = Time.now
 		datetime = t.strftime("%Y-%m-%d-time-%H.%M")   #=> "Printed on 04/09/2003"
@@ -468,7 +462,7 @@ namespace :db do
 		print "\n"
 		rootdbpass = STDIN.gets.chomp
 
-		dbsetarr = getDbSettings()
+		dbsetarr = Typo3Helper::get_db_settings()
 		sourcedatabase = dbsetarr[3]
 
 		#print "Current dir"
@@ -480,93 +474,54 @@ namespace :db do
 		print "\n"
 	end
 
-desc 'desc: Install all SQL files'
-task :install do
+	desc 'desc: Install all SQL files'
+	task :install do
 
-	filename='joined.sql'
-	if File.file?(filename) 
-		FileUtils.rm(filename)
+		filename='joined.sql'
+		if File.file?(filename) 
+			FileUtils.rm(filename)
+		end
+
+		$sqlFiles = []
+		$sqlFiles << File.join('web',currentDummydir,"t3lib","stddb","tables.sql") 
+
+		compileExtList
+		$extList.each { | extName |
+			extBase = File.join('web',currentDummydir,"typo3conf","ext") 
+		if CONFIG['typo3']['sysExtList'].include? extName
+			extBase = File.join('web',currentDummydir,"typo3","sysext") 
+		else
+			extBase = File.join('web',currentDummydir,"typo3conf","ext") 
+		end
+
+		extSql = File.join(extBase,extName,"ext_tables.sql") 
+		extSqlStatic = File.join(extBase,extName,"ext_tables_static+adt.sql") 
+		if File.file?(extSql) 
+			$sqlFiles << extSql	
+		end 
+		if File.file?(extSqlStatic) 
+			$sqlFiles << extSqlStatic	
+		end 
+		}
+
+		File.open(filename,"w"){|f|
+			f.puts $sqlFiles.map{|s| IO.read(s)} 
+		}
+
+		#	flush_cache
+		Rake::Task["env:flush_cache"].invoke
+
+		Typo3Helper::compile_joined_sql
+		#cmd="web/dummy/typo3/cli_dispatch.phpsh lsd_deployt3iu compileSQL -f #{File.dirname(__FILE__)}/joined.sql"
+		#system(cmd)
+
+		### CREATE BE USERS
+		Typo3Helper::create_be_users
+
+		#	flush_cache
+		Rake::Task["env:flush_cache"].invoke
+
 	end
-
-	$sqlFiles = []
-	$sqlFiles << File.join('web',currentDummydir,"t3lib","stddb","tables.sql") 
-
-	compileExtList
-	$extList.each { | extName |
-		extBase = File.join('web',currentDummydir,"typo3conf","ext") 
-	if CONFIG['typo3']['sysExtList'].include? extName
-		extBase = File.join('web',currentDummydir,"typo3","sysext") 
-	else
-		extBase = File.join('web',currentDummydir,"typo3conf","ext") 
-	end
-
-	extSql = File.join(extBase,extName,"ext_tables.sql") 
-	extSqlStatic = File.join(extBase,extName,"ext_tables_static+adt.sql") 
-	if File.file?(extSql) 
-		$sqlFiles << extSql	
-	end 
-	if File.file?(extSqlStatic) 
-		$sqlFiles << extSqlStatic	
-	end 
-	}
-
-	File.open(filename,"w"){|f|
-		f.puts $sqlFiles.map{|s| IO.read(s)} 
-	}
-
-	### temporary install needed extensions
-	conffilename = 'web/dummy/typo3conf/localconf.php'
-	appendCode = """
-$TYPO3_CONF_VARS['EXT']['extList'] .= ',lsd_deployt3iu,extbase';
-	"""
-
-	if File.file?(conffilename) 
-		last_line = 0
-		file = File.open(conffilename, 'r+')
-		file.each { last_line = file.pos unless file.eof? }
-		file.seek(last_line, IO::SEEK_SET)
-		file.write(appendCode)
-		file.write("?>")
-		file.close
-	else
-		print "file does not exist: "+	conffilename + "\n"
-	end
-
-	#	flush_cache
-	Rake::Task["env:flush_cache"].invoke
-
-	###### init.php security bypass
-	#$BE_USER->checkCLIuser();
-	#$BE_USER->backendCheckLogin();  // Checking if there's a user logged in
-
-	text = File.read('web/dummy/typo3/init.php')
-	text = text.gsub(/^\$BE_USER->checkCLIuser/, "\#$BE_USER->checkCLIuser")
-	text = text.gsub(/^\$BE_USER->backendCheckLogin/, "\#$BE_USER->backendCheckLogin")
-	File.open('web/dummy/typo3/init.php', "w") {|file| file.puts text}
-
-	cmd="web/dummy/typo3/cli_dispatch.phpsh lsd_deployt3iu compileSQL -f #{File.dirname(__FILE__)}/joined.sql"
-	system(cmd)
-
-	cmd="web/dummy/typo3/cli_dispatch.phpsh lsd_deployt3iu add_beuser -u admin -p password -a 1 -e admin@mysite.com"
-	system(cmd)
-
-	###### restore init.php security
-
-	text = File.read('web/dummy/typo3/init.php')
-	text = text.gsub(/^\#\$BE_USER->checkCLIuser/, "$BE_USER->checkCLIuser")
-		text = text.gsub(/^\#\$BE_USER->backendCheckLogin/, "$BE_USER->backendCheckLogin")
-		File.open('web/dummy/typo3/init.php', "w") {|file| file.puts text}
-
-	text = File.read(conffilename)
-	text = text.gsub(/^\$TYPO3_CONF_VARS\['EXT'\]\['extList'\]\ \.=\ ',lsd_deployt3iu,extbase';/, "")
-	File.open(conffilename, "w") {|file| file.puts text}
-
-	#	flush_cache
-	Rake::Task["env:flush_cache"].invoke
-
-end
-
-
 end
 
 
@@ -809,11 +764,36 @@ namespace :t3 do
 	end
 end
 
+namespace :dev do 
+	# read more about version gem @ https://github.com/stouset/version 
+	task :version do
+		require 'rubygems'
+		require 'rake/version_task'
+		Rake::VersionTask.new
 
-def getDbSettings()
-	cmd = "php -r \'include \"web/dummy/typo3conf/"+$localconfFile+"\";echo \"$typo_db_username $typo_db_password $typo_db_host $typo_db\";\'"
-	dbsettings =%x[ #{cmd} ]
-	dbsettings.split(' ');
+		Rake::Task["version"].invoke
+	end
+	task :versionbump do
+		require 'rubygems'
+		require 'rake/version_task'
+		Rake::VersionTask.new
+
+		Rake::Task["version:bump"].invoke
+	end
+end
+
+namespace :test do 
+	task :travis do
+		system('rspec test_rakefile_spec.rb')
+	end
+	task :env do
+		system('rspec test_typo3env_spec.rb')
+	end
+	
+	task :all do
+		system('rspec test_rakefile_spec.rb')
+		system('rspec test_typo3env_spec.rb')
+	end
 end
 
 def setLocalconfDbSettings(db,user,pass,host='localhost',outfile='web/dummy/typo3conf/localconf.new.php')
@@ -870,5 +850,3 @@ def compileExtList
 		end
 	}
 end
-
-
