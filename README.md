@@ -1,13 +1,14 @@
-Description
-===========
+# DeployTYPO3 [![Build Status](https://travis-ci.org/Lingewoud/deployTYPO3.png?branch=master)](https://travis-ci.org/Lingewoud/deployTYPO3)
+
+## Description
+
 Toolkit for automating clean TYPO3 installs based on recipes. DeployTYPO3 also
 helps you maintain existing TYPO3 environments.
 
 Created and maintained by [Pim Snel](https://github.com/mipmip).
 Sponsored by [PAS3](http://www.pas3.com).
 
-QuickStart 1
-============
+## QuickStart 1
 
 1. Create MySQL database.
 2. On your Unix machine in your webdirectory enter the following commands:
@@ -33,13 +34,12 @@ INSERT INTO be_users (uid, pid, tstamp, username, password, admin, usergroup, di
 
 When the scripts has finished point your browser ```http://yourhost.com/web/dummy``` or ```http://yourhost.com/web/dummy/typo3```. You can now use your fresh vanilla TYPO3
 
-Quickstart 2
-============
+## Quickstart 2
 
 We are creating a fully functional vagrant/chef-solo example. Read further instructions here: [https://github.com/Lingewoud/vagrant-deployTYPO3](https://github.com/Lingewoud/vagrant-deployTYPO3).
 
-Features
---------
+## Features
+
 * One command automated deployment  
 * One command automated src-upgrade 
 * One central configuration recipe
@@ -56,26 +56,23 @@ Features
 * Environment cloning
 * Database backups
 
-Advantages
-----------
+## Advantages
 * No need to maintain SQL-images
 * Enables create and maintain TYPO3 distributions. 
 * Enables extension development using git or subversion
 * Enables smart continues integration
 * Designed for vagrant and chef integration
 
-Limitations
------------
+## Limitations
+
 * No support yet fot TYPO3 6.x.x
 
-Requirements
-============
+## Requirements
 * Rake
 * webserver allowing symlinks
 * mysql
 
-Usage
-=====
+## Usage
 
 Have a look at the ```config/config.sample.yml``` file how to create a custom recipe.
 
@@ -113,16 +110,15 @@ rake t3:versions        # desc: show available TYPO3 versions
 DeployTYPO3 version 1.5
 ```
 
-Contributing to deployTYPO3
-===========================
+## Contributing to deployTYPO3
 Please report issues and pull-requests at [https://github.com/Lingewoud/deployTYPO3](https://github.com/Lingewoud/deployTYPO3)
 
-Credits
-=======
+## Credits
+
 * The superb [TYPO3](http://www.typo3.org) project with it's [smart community](https://typo3.org/community/)
 
-Copyright and license
-=====================
+## Copyright and license
+
 Copyright 2013 Pim Snel
 Copyright 2013 Lingewoud b.v.
 
