@@ -1,3 +1,5 @@
+require 'spec_helper'
+=begin
 require 'rake'
 require 'fileutils'  
 require "yaml"
@@ -22,6 +24,8 @@ describe LoadConfig do
 		end
 	end
 end
+=end
+
 
 describe Typo3Helper do
 

@@ -783,17 +783,17 @@ namespace :dev do
 end
 
 namespace :test do 
-	task :travis do
-		system('rspec test_rakefile_spec.rb')
+
+	task :travis => ["test:unit"]
+
+	task :unit do
+		system('rspec spec/test_rakefile_spec.rb')
 	end
 	task :env do
-		system('rspec test_typo3env_spec.rb')
+		system('rspec spec/test_typo3env_spec.rb')
 	end
 	
-	task :all do
-		system('rspec test_rakefile_spec.rb')
-		system('rspec test_typo3env_spec.rb')
-	end
+	task :all => ["test:unit", "test:env"]
 end
 
 def setLocalconfDbSettings(db,user,pass,host='localhost',outfile='web/dummy/typo3conf/localconf.new.php')

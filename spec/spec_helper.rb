@@ -1,3 +1,27 @@
+require 'rake'
+require 'fileutils'  
+require "yaml"
+require 'rss/1.0'
+require 'rss/2.0'
+require 'open-uri'
+require 'net/http'
+
+require 'lib/load_config'
+require 'lib/init_dt3'
+require 'lib/dt3_logger'
+require 'lib/typo3_helper'
+
+
+CONFIG = LoadConfig::load_config
+DT3CONST = InitDT3::load_constants
+describe LoadConfig do
+	describe '.load_config' do
+		it "should return the yaml config as array" do
+			LoadConfig.load_config.should include("deploymentName")
+		end
+	end
+end
+
 def describe_rake_task(task_name, filename, &block)
 	require "rake"
 
