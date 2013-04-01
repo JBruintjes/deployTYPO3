@@ -35,6 +35,7 @@ require 'net/http'
 require 'lib/load_config'
 require 'lib/init_dt3'
 require 'lib/dt3_logger'
+require 'lib/dt3_div'
 require 'lib/typo3_helper'
 
 Dir.glob('lib/tasks/*.rake').each { |r| import r }
@@ -324,13 +325,13 @@ namespace :ext do
 	task :singles_get do
 		if CONFIG['extSingles']
 			print "Downloading single extensions\n"
+			
 
 			if not File.directory?(File.join(extSinglesDir))
 				FileUtils.mkdir extSinglesDir
 			end
 
 			CONFIG['extSingles'].each {|key,hash|
-
 				if not File.directory?(File.join(extSinglesDir,key))
 					if(hash['type']=='git')
 						system("git clone " + hash['uri'] + " "+ File.join(extSinglesDir,key))
@@ -338,11 +339,10 @@ namespace :ext do
 					if(hash['type']=='ter')
 
 						srcurl ='typo3.org'
-						p hash
 						srcpath = '/extensions/repository/download/'+key+'/'+hash['version']+'/t3x/'
 						destpath = File.join(extSinglesDir,key+'.t3x')
 
-						downloadTo(srcurl,srcpath,destpath)
+						DT3Div::downloadTo(srcurl,srcpath,destpath)
 						cmd = '/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php extSingles/'+key+'.t3x '+ ' extSingles/'+key
 						system (cmd)
 
@@ -820,14 +820,14 @@ def checkValidDir(dir)
 	end
 end
 
-def downloadTo(src_url,src_path,dest_filepath)
-	Net::HTTP.start(src_url) { |http2|
-		resp2 = http2.get(src_path)
-		open(dest_filepath, "w+") { |file2|
-			file2.write(resp2.body)
-		}
-	}
-end
+#def downloadTo(src_url,src_path,dest_filepath)
+#	Net::HTTP.start(src_url) { |http2|
+#		resp2 = http2.get(src_path)
+#		open(dest_filepath, "w+") { |file2|
+#			file2.write(resp2.body)
+#		}
+#	}
+#end
 
 def compileExtList
 

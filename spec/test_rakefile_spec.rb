@@ -40,6 +40,17 @@ describe Typo3Helper do
 	end
 end
 
+describe DT3Div do
+	describe '.downloadTo' do
+		it "should download static_tables to tmp" do
+			DT3Div.downloadTo('typo3.org','/extensions/repository/download/static_info_tables/2.3.1/t3x/','/tmp/static_info_tables.t3x').should == true
+		end
+	end
+end
+
+
+
+
 #rake conf_init sitename=t3deptest t3version=4.7.9 dbname=pimsql1 dbuser=pimsql1 dbpass=test dbhost=localhost
 
 describe_rake_task "help", "Rakefile" do

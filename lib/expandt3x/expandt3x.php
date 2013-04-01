@@ -38,7 +38,7 @@ if ($argv[2] != '') $unpackDir=$argv[2];
  
 // Datei aus Kommandozeile holen...
 $extFile=$argv[1];
-if (file_exists($extFile)) { print "\n Entpacke Datei: '$extFile'...\n\n";}
+if (file_exists($extFile)) { print "\n Extract Data: '$extFile'...\n\n";}
                        else{ print "\n Datei: '$extFile' wurde leider nicht gefunden \n"; printUsageAndDie();}
  
  

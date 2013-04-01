@@ -9,6 +9,7 @@ require 'net/http'
 require 'lib/load_config'
 require 'lib/init_dt3'
 require 'lib/dt3_logger'
+require 'lib/dt3_div'
 require 'lib/typo3_helper'
 
 
