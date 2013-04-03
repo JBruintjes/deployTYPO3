@@ -68,7 +68,68 @@ class Typo3Helper
 		end
 	end
 
-	def	self.compile_joined_sql
+	def self.get_ext_list_from_config_and_extdirs
+
+		extList = []
+		extList.concat(CONFIG['typo3']['sysExtList'])
+
+		extDest = File.join(DT3CONST['DUMMYDIR'],"typo3conf","ext") 
+
+		Dir.foreach(File.join("extBundles")) {|rdir| 
+			if DT3Div::checkValidDir(rdir) and File.directory?(File.join("extBundles",rdir))
+				Dir.foreach(File.join("extBundles",rdir)) {|sdir| 
+					if DT3Div::checkValidDir(sdir) and File.directory?(File.join("extBundles",rdir,sdir))
+						extList << sdir
+					end
+				}
+			end
+		}
+		Dir.foreach(File.join("extSingles")) {|rdir| 
+			if DT3Div::checkValidDir(rdir) and File.directory?(File.join("extSingles",rdir))
+				extList << rdir
+			end
+		}
+
+		return extList
+
+	end
+
+	def	self.pre_compile_joined_sql(extList)
+
+		if File.file?(DT3CONST['JOINEDSQL']) 
+			FileUtils.rm(DT3CONST['JOINEDSQL'])
+		end
+
+		sqlFiles = []
+		sqlFiles << File.join(DT3CONST['DUMMYDIR'],"t3lib","stddb","tables.sql") 
+
+		extList.each { | extName |
+			extBase = File.join(DT3CONST['DUMMYDIR'],"typo3conf","ext") 
+		if CONFIG['typo3']['sysExtList'].include? extName
+			extBase = File.join(DT3CONST['DUMMYDIR'],"typo3","sysext") 
+		else
+			extBase = File.join(DT3CONST['DUMMYDIR'],"typo3conf","ext") 
+		end
+
+		extSql = File.join(extBase,extName,"ext_tables.sql") 
+		extSqlStatic = File.join(extBase,extName,"ext_tables_static+adt.sql") 
+
+		if File.file?(extSql) 
+			sqlFiles << extSql	
+		end 
+		if File.file?(extSqlStatic) 
+			sqlFiles << extSqlStatic	
+		end 
+		}
+
+		File.open(DT3CONST['JOINEDSQL'],"w"){|f|
+			f.puts sqlFiles.map{|s| IO.read(s)} 
+		}
+		return true
+	end
+	
+	
+	def	self.compile_and_import_joined_sql
 
 		self.init_php_security_bypass
 
@@ -118,6 +179,18 @@ class Typo3Helper
 		dbsettings =%x[ #{cmd} ]
 		return dbsettings.split(' ');
 	end
+
+	def self.setLocalconfDbSettings(db,user,pass,host='localhost',outfile='web/dummy/typo3conf/localconf.new.php')
+
+		text = File.read(DT3CONST['TYPO3_LOCALCONF_FILE'])
+		text = text.gsub(/^\$typo_db_password\ .*/, "$typo_db_password = '"+pass+"'; //set by Deploy TYPO3")
+		text = text.gsub(/^\$typo_db\ .*/, "$typo_db = '"+db+"'; //set by Deploy TYPO3")
+		text = text.gsub(/^\$typo_db_host\ .*/, "$typo_db_host = '"+host+"'; //set by Deploy TYPO3")
+		text = text.gsub(/^\$typo_db_username\ .*/, "$typo_db_username = '"+user+"'; //set by Deploy TYPO3")
+		File.open(outfile, "w") {|file| file.puts text}
+		return true
+	end
+
 end
 
 

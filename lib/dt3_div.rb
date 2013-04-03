@@ -9,4 +9,20 @@ class DT3Div
 		}
 		return true
 	end
+
+	def self.checkValidDir(dir)
+		if dir!= '..' and dir != '.' and dir!= '.svn' and dir!= '.git'
+			return true
+		else
+			return false
+		end
+	end
+
+	def rmsymlink(symlink)
+		if File.symlink?( symlink )
+			FileUtils.rm_r( symlink )
+		end
+	end
+
+
 end
