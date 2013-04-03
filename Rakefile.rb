@@ -687,7 +687,6 @@ end
 namespace :t3 do
 
 	desc 'desc: do a complete purge and install of the TYPO3 environment'
-	#task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, "ext:bundles_get", :linkExtBundles, "ext:singles_get",:linkExtSingles, "init:localconf_gen", :insertInitConf, "env:touchinst", "db:install"]
 	
 	task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, "ext:bundles_get", "ext:singles_get", :linkExtBundles, :linkExtSingles, "init:localconf_gen", :insertInitConf, "env:touchinst","db:flush_force", "db:install"]
 

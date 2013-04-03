@@ -56,7 +56,6 @@ class Typo3Helper
 			extList.delete_if {|x| x == "lsd_deployt3iu"}
 			extList.delete('lsd_deployt3iu')
 			extList.uniq
-			p extList
 			self.setLocalconfExtList(extList,DT3CONST['TYPO3_LOCALCONF_FILE'])
 		end
 	end
@@ -77,12 +76,6 @@ class Typo3Helper
 				}
 			end
 		}
-#		Dir.foreach(File.join(extSinglesDir)) {|rdir| 
-#			if DT3Div::checkValidDir(rdir) and File.directory?(File.join(extSinglesDir,rdir))
-#				extList << rdir
-#			end
-#		}
-#		p extList
 
 		return extList
 
@@ -203,6 +196,3 @@ class Typo3Helper
 	end
 
 end
-
-
-
