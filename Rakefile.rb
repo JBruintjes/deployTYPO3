@@ -1,8 +1,8 @@
 =begin
 
- Commandline Toolbox for TYPO3 administrator and developers made with Rake. 
+Commandline Toolbox for TYPO3 administrator and developers made with Rake. 
 
- (C) 2013 Lingewoud BV <pim@lingewoud.nl>
+(C) 2013 Lingewoud BV <pim@lingewoud.nl>
 
 Copyright 2013 Pim Snel Copyright 2013 Lingewoud b.v.
 
@@ -72,7 +72,7 @@ currentSrcTar = 'typo3_src-'+currentVersion+'.tar.gz'
 webDir = File.join("web") 
 extBundlesDir = File.join("extBundles")
 rootFilesBundlesDir = File.join("rootFilesBundles")
-extSinglesDir = File.join("extSingles")
+extSinglesDir = File.join("extBundles","extSingles")
 typo3sourceDir = File.join("typo3source")
 trackedPathsDir = File.join("trackedPaths")
 structDirs = [webDir, extBundlesDir, typo3sourceDir, trackedPathsDir, rootFilesBundlesDir]
@@ -81,9 +81,17 @@ upgradingSrc = false
 
 #####################################
 
-$extList = []
-
 task :default => :help
+
+desc 'desc: show main tasks'
+task :help do
+	print "\n"
+	system("rake -T")
+	print "\n"
+	print "DeployTYPO3 version " + DT3CONST['VERSION']
+	print "\n"
+	print "\n"
+end
 
 desc 'desc: generates a config.yml'
 task :conf_init do
@@ -139,40 +147,46 @@ task :conf_init do
 	File.open('config/config.yml', "w") {|file| file.puts text}
 end
 
-namespace :env do
+namespace :init do 
 	task :localconf_gen do
 		#TODO
+		#set site name
 		#check db is set
 		#else ignore
 
 		print "Generating initial localconf.php\n"
-		filename = 'web/dummy/typo3conf/localconf.php'
-		appendCode = """
-# deployTYPO3 was here #
-# read more about it: https://github.com/Lingewoud/deployTYPO3 
 
+		extList = Typo3Helper::get_ext_list_from_config_and_extdirs
+		extList.uniq
+		Typo3Helper::setLocalconfExtList(extList,DT3CONST['TYPO3_LOCALCONF_FILE'])
+
+		#TODO do not append but replace
+		appendCode = """
+# deployTYPO3 was here 
+# read more about it: https://github.com/Lingewoud/deployTYPO3 
 $typo_db_username = '#{CONFIG['typo3']['dbuser']}';   	//  Modified or inserted by deployTYPO3
 $typo_db_password = '#{CONFIG['typo3']['dbpass']}';   	// Modified or inserted by deployTYPO3
 $typo_db_host = '#{CONFIG['typo3']['dbhost']}';    		//  Modified or inserted by deployTYPO3
 $typo_db = '#{CONFIG['typo3']['dbname']}';				//  Modified or inserted by deployTYPO3
-		"""
-
-		if File.file?(filename) 
+"""
+		if File.file?(DT3CONST['TYPO3_LOCALCONF_FILE']) 
 			last_line = 0
-			file = File.open(filename, 'r+')
+			file = File.open(DT3CONST['TYPO3_LOCALCONF_FILE'], 'r+')
 			file.each { last_line = file.pos unless file.eof? }
 			file.seek(last_line, IO::SEEK_SET)
 			file.write(appendCode)
 			file.write("?>")
 			file.close
 		else
-			print "file does not exist: "+	filename + "\n"
+			print "file does not exist: "+	DT3CONST['TYPO3_LOCALCONF_FILE'] + "\n"
 		end
 
-		#	$TYPO3_CONF_VARS['EXT']['extList'] .= ',lsd_deployt3iu,extbase';
-		#	flush_cache
 		Rake::Task["env:flush_cache"].invoke
 	end
+
+end
+
+namespace :env do
 
 	desc 'desc: upgrade to newer version'
 	task :upgrade_src do
@@ -295,15 +309,6 @@ $typo_db = '#{CONFIG['typo3']['dbname']}';				//  Modified or inserted by deploy
 	end
 end
 
-desc 'desc: show main tasks'
-task :help do
-	print "\n"
-	system("rake -T")
-	print "\n"
-	print "DeployTYPO3 version " + DT3CONST['VERSION']
-	print "\n"
-	print "\n"
-end
 
 namespace :ext do
 	desc 'desc: download all single extensions defined in config.yml'
@@ -327,13 +332,12 @@ namespace :ext do
 						destpath = File.join(extSinglesDir,key+'.t3x')
 
 						DT3Div::downloadTo(srcurl,srcpath,destpath)
-						cmd = '/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php extSingles/'+key+'.t3x '+ ' extSingles/'+key
+						cmd = "/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php #{File.join(extSinglesDir, key+'.t3x')}  #{File.join(extSinglesDir,key)}"
 						system (cmd)
 
-						FileUtils.rm('extSingles/'+key+'.t3x')
+						FileUtils.rm(File.join(extSinglesDir,key+'.t3x'))
 					end
 				end
-
 			}
 		end
 	end
@@ -398,6 +402,9 @@ namespace :db do
 		if(cleanConfirm.downcase=='yes')
 			DT3MySQL::flush_tables
 		end
+	end
+	task :flush_force do
+		DT3MySQL::flush_tables
 	end
 
 	desc 'desc: show all tables'
@@ -568,6 +575,8 @@ task :linkDummy do
 end
 
 task :linkExtSingles do
+end
+task :linkExtSinglesOLD do
 	print "linking single extensions"
 	print "\n"
 
@@ -634,14 +643,6 @@ task :insertInitConf do
 	end
 end
 
-task :generateConf do
-	#compile extList, all sysExt, plus all extBundles/ext's, plus all extSingles  
-	#sysextlist + contents of extBundles and extSingles
-	compileExtList
-	p $extList
-end
-
-
 
 
 desc 'desc: append configured php code to configured files, usefull for overriding modules configurations'
@@ -686,7 +687,9 @@ end
 namespace :t3 do
 
 	desc 'desc: do a complete purge and install of the TYPO3 environment'
-	task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, "env:localconf_gen", "ext:bundles_get", :linkExtBundles, "ext:singles_get",:linkExtSingles, :insertInitConf, "env:touchinst", "db:install"]
+	#task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, "ext:bundles_get", :linkExtBundles, "ext:singles_get",:linkExtSingles, "init:localconf_gen", :insertInitConf, "env:touchinst", "db:install"]
+	
+	task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, "ext:bundles_get", "ext:singles_get", :linkExtBundles, :linkExtSingles, "init:localconf_gen", :insertInitConf, "env:touchinst","db:flush_force", "db:install"]
 
 	desc 'desc: show available TYPO3 versions'
 	task :versions do
@@ -726,26 +729,4 @@ namespace :test do
 	task :all do
 		system('rspec spec')
 	end
-end
-
-def compileExtList
-
-	$extList.concat(CONFIG['typo3']['sysExtList'])
-
-	extDest = File.join('web','dummy',"typo3conf","ext") 
-
-	Dir.foreach(File.join("extBundles")) {|rdir| 
-		if DT3Div::checkValidDir(rdir) and File.directory?(File.join("extBundles",rdir))
-			Dir.foreach(File.join("extBundles",rdir)) {|sdir| 
-				if DT3Div::checkValidDir(sdir) and File.directory?(File.join("extBundles",rdir,sdir))
-					$extList << sdir
-				end
-			}
-		end
-	}
-	Dir.foreach(File.join("extSingles")) {|rdir| 
-		if DT3Div::checkValidDir(rdir) and File.directory?(File.join("extSingles",rdir))
-			$extList << rdir
-		end
-	}
 end

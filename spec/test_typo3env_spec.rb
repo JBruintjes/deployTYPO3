@@ -44,4 +44,14 @@ describe Typo3Helper do
 		end
 	end
 
+	describe '.setLocalconfExtList' do
+		it "should set or replace extList" do
+			File.delete('web/dummy/typo3conf/localconf.new.php')
+			Typo3Helper::setLocalconfExtList(['cms','version']).should == true
+			Typo3Helper::getLocalConfExtList().should include('cms');
+			Typo3Helper::getLocalConfExtList().should include('version');
+			#File.delete('web/dummy/typo3conf/localconf.new.php')
+		end
+	end
+
 end

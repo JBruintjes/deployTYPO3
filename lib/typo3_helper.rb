@@ -42,29 +42,22 @@ class Typo3Helper
 		self.init_php_security_restore
 		
 		return cmd
-		
 	end
+
 	def self.dt3_helper_extension(action)
 		if action == 'install'
 
-			appendCode = "\n$TYPO3_CONF_VARS['EXT']['extList'] .= ',lsd_deployt3iu,extbase';\n"
-
-			if File.file?(DT3CONST['TYPO3_LOCALCONF_FILE']) 
-				last_line = 0
-				file = File.open(DT3CONST['TYPO3_LOCALCONF_FILE'], 'r+')
-				file.each { last_line = file.pos unless file.eof? }
-				file.seek(last_line, IO::SEEK_SET)
-				file.write(appendCode)
-				file.write("?>")
-				file.close
-			else
-				print "file does not exist: "+	DT3CONST['TYPO3_LOCALCONF_FILE'] + "\n"
-			end
-
+			extList = self.getLocalConfExtList()
+			extList << 'lsd_deployt3iu'
+			extList.uniq
+			self.setLocalconfExtList(extList,DT3CONST['TYPO3_LOCALCONF_FILE'])
 		elsif action == 'uninstall'
-			text = File.read(DT3CONST['TYPO3_LOCALCONF_FILE'])
-			text = text.gsub(/^\$TYPO3_CONF_VARS\['EXT'\]\['extList'\]\ \.=\ ',lsd_deployt3iu,extbase';/, "")
-			File.open(DT3CONST['TYPO3_LOCALCONF_FILE'], "w") {|file| file.puts text}
+			extList = self.getLocalConfExtList
+			extList.delete_if {|x| x == "lsd_deployt3iu"}
+			extList.delete('lsd_deployt3iu')
+			extList.uniq
+			p extList
+			self.setLocalconfExtList(extList,DT3CONST['TYPO3_LOCALCONF_FILE'])
 		end
 	end
 
@@ -84,11 +77,12 @@ class Typo3Helper
 				}
 			end
 		}
-		Dir.foreach(File.join("extSingles")) {|rdir| 
-			if DT3Div::checkValidDir(rdir) and File.directory?(File.join("extSingles",rdir))
-				extList << rdir
-			end
-		}
+#		Dir.foreach(File.join(extSinglesDir)) {|rdir| 
+#			if DT3Div::checkValidDir(rdir) and File.directory?(File.join(extSinglesDir,rdir))
+#				extList << rdir
+#			end
+#		}
+#		p extList
 
 		return extList
 
@@ -181,7 +175,6 @@ class Typo3Helper
 	end
 
 	def self.setLocalconfDbSettings(db,user,pass,host='localhost',outfile='web/dummy/typo3conf/localconf.new.php')
-
 		text = File.read(DT3CONST['TYPO3_LOCALCONF_FILE'])
 		text = text.gsub(/^\$typo_db_password\ .*/, "$typo_db_password = '"+pass+"'; //set by Deploy TYPO3")
 		text = text.gsub(/^\$typo_db\ .*/, "$typo_db = '"+db+"'; //set by Deploy TYPO3")
@@ -189,6 +182,24 @@ class Typo3Helper
 		text = text.gsub(/^\$typo_db_username\ .*/, "$typo_db_username = '"+user+"'; //set by Deploy TYPO3")
 		File.open(outfile, "w") {|file| file.puts text}
 		return true
+	end
+
+	def self.setLocalconfExtList(extList,outfile='web/dummy/typo3conf/localconf.new.php')
+		newconf= "$TYPO3_CONF_VARS['EXT']['extList'] = '#{extList.join(',')}'"
+		text = File.read(DT3CONST['TYPO3_LOCALCONF_FILE'])
+		text = text.gsub(/^\$TYPO3_CONF_VARS\['EXT'\]\['extList'\].*/, newconf+"; //set by Deploy TYPO3")
+		File.open(outfile, "w") {|file| file.puts text}
+		return true
+	end
+
+	def self.getLocalConfExtList(infile='web/dummy/typo3conf/localconf.php')
+		cmd = "php -r \'include \"#{infile}\";echo $TYPO3_CONF_VARS[\"EXT\"][\"extList\"];\'"
+		extList =%x[ #{cmd} ]
+		return extList.split(',');
+	end
+
+	def self.add_to_localconf_extlist(extList)
+
 	end
 
 end
