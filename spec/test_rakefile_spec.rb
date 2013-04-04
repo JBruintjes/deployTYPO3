@@ -13,9 +13,12 @@ end
 describe DT3Div do
 	describe '.downloadTo' do
 		it "should download static_tables to tmp" do
-			DT3Div.downloadTo('typo3.org','/extensions/repository/download/static_info_tables/2.3.1/t3x/','/tmp/static_info_tables.t3x').should == true
-			File.exist?('/tmp/static_info_tables.t3x').should be_true
-			File.delete('/tmp/static_info_tables.t3x')
+			DT3Div.downloadTo('typo3.org','/extensions/repository/download/templavoila/1.8.0/t3x/','/tmp/templavoila.t3x').should == true
+			File.exist?('/tmp/templavoila.t3x').should be_true
+			ExpandT3x::expand('/tmp/templavoila.t3x','/tmp/templavoila').should be_true
+			File.exist?('/tmp/templavoila/ext_emconf.php').should be_true
+			FileUtils.rm_r('/tmp/templavoila')
+			File.delete('/tmp/templavoila.t3x')
 		end
 	end
 

@@ -38,6 +38,7 @@ require 'lib/dt3_logger'
 require 'lib/dt3_div'
 require 'lib/dt3_mysql'
 require 'lib/typo3_helper'
+require 'lib/expandt3x.rb'
 
 Dir.glob('lib/tasks/*.rake').each { |r| import r }
 
@@ -332,6 +333,7 @@ namespace :ext do
 						destpath = File.join(extSinglesDir,key+'.t3x')
 
 						DT3Div::downloadTo(srcurl,srcpath,destpath)
+
 						cmd = "/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php #{File.join(extSinglesDir, key+'.t3x')}  #{File.join(extSinglesDir,key)}"
 						system (cmd)
 

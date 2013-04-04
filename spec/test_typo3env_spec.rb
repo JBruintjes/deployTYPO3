@@ -26,6 +26,7 @@ describe Typo3Helper do
 		end
 	end
 
+
 	describe '.create_be_users' do
 		it "should create be users mysql command" do
 			Typo3Helper.create_be_users.should include("add_beuser")
