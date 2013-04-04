@@ -19,6 +19,7 @@ describe DT3Div do
 			File.exist?('/tmp/templavoila/ext_emconf.php').should be_true
 			FileUtils.rm_r('/tmp/templavoila')
 			File.delete('/tmp/templavoila.t3x')
+
 		end
 	end
 

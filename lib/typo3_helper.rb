@@ -195,4 +195,9 @@ class Typo3Helper
 
 	end
 
+	def self.download_ext_xml
+		DT3Div.downloadTo('typo3.org','/fileadmin/ter/extensions.xml.gz','web/dummy/typo3temp/extensions.xml.gz')
+		system('gunzip -c web/dummy/typo3temp/extensions.xml.gz > web/dummy/typo3temp/extensions.xml');
+		return true
+	end
 end

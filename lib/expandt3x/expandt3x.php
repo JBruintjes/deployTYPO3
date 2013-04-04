@@ -19,10 +19,11 @@ function printUsageAndDie(){
 
  ...written by droptix and luwo. (look at http://www.typo3.net/forum)
 
- Usage: expand_t3x.php [filename.t3x]  <directory> 
+ Usage: expand_t3x.php [filename.t3x]  <directory> extension.xml
 
- * filename.t3x = Name of your t3x-file
- * directory    = optional directory of extraction (default="extension")
+ * filename.t3x  = Name of your t3x-file
+ * directory     = optional directory of extraction (default="extension")
+ * extension.xml = location of the extension.xml-file
 ------------------------------------------------------------------------------
 
 EOM;
@@ -42,6 +43,8 @@ if (file_exists($extFile)) { print "\n Extract Data: '$extFile'...\n\n";}
 else{ print "\n Datei: '$extFile' wurde leider nicht gefunden \n"; printUsageAndDie();}
 
 
+$depenc=$argv[3];
+$dep_arr = unserialize(base64_decode($depenc));
 
 // Start unpacking.
 $fileContent = file_get_contents($extFile);
@@ -88,6 +91,18 @@ foreach ($ext as $e) {
 		foreach($e['EM_CONF'] as $key=>$emconf){
 			$_extemconfcontent .= sprintf("\$EM_CONF[\$_EXTKEY]['$key'] = '$emconf';\n");
 		}
+		foreach($dep_arr as $dep) {
+			if($dep['kind']=='depends')
+			{
+				$_extemconfcontent .= sprintf("\$EM_CONF[\$_EXTKEY]['constraints']['depends']['{$dep['extensionKey']}'] = '{$dep['versionRange']}';\n");
+
+			}
+			elseif($dep['kind']=='conflicts')
+			{
+				$_extemconfcontent .= sprintf("\$EM_CONF[\$_EXTKEY]['constraints']['conflicts']['{$dep['extensionKey']}'] = '{$dep['versionRange']}';\n");
+			}
+		}
+
 
 		$_extemconfcontent .= '?>';
 		$e["FILES"]['ext_emconf.php']['name'] =  'ext_emconf.php';

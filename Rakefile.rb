@@ -32,6 +32,10 @@ require 'rss/2.0'
 require 'open-uri'
 require 'net/http'
 
+require 'rubygems'
+require 'nokogiri'
+require "base64"
+
 require 'lib/load_config'
 require 'lib/init_dt3'
 require 'lib/dt3_logger'

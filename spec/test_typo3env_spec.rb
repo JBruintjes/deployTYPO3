@@ -55,4 +55,13 @@ describe Typo3Helper do
 		end
 	end
 
+	describe '.download_ext_xml' do
+		it "should download extension xml to typo3temp" do
+			Typo3Helper::download_ext_xml.should == true
+			File.exist?('web/dummy/typo3temp/extensions.xml.gz').should be_true
+			File.exist?('web/dummy/typo3temp/extensions.xml').should be_true
+			#File.delete('/tmp/templavoila.t3x')
+		end
+	end
+
 end
