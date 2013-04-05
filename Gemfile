@@ -1,6 +1,7 @@
 source 'https://rubygems.org'
 gem 'rspec', :require => 'spec'
 gem 'rake', :require => 'rake'
+gem 'nokogiri', :require => 'nokogiri'
 #gem '', :require => 'fileutils'
 #gem '', :require => "yaml"
 #gem '', :require => 'rss/1.0'
