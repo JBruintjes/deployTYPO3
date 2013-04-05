@@ -1,5 +1,7 @@
 # DeployTYPO3 [![Build Status](https://travis-ci.org/Lingewoud/deployTYPO3.png?branch=master)](https://travis-ci.org/Lingewoud/deployTYPO3)
 
+![image](http://picdrop.t3lab.com/iG3nIv9Kla.png)
+
 ## Description
 
 Toolkit for automating clean TYPO3 installs based on recipes. DeployTYPO3 also
