@@ -696,6 +696,10 @@ namespace :t3 do
 	
 	task :install => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, "ext:bundles_get", "ext:singles_get", :linkExtBundles, :linkExtSingles, "init:localconf_gen", :insertInitConf, "env:touchinst","db:flush_force", "db:install", :linkTypo3Fix]
 
+	task :install_manual => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3, "ext:bundles_get", "ext:singles_get", :linkExtBundles, :linkExtSingles, "init:localconf_gen", :insertInitConf, "env:touchinst","db:flush_force", "db:install", :linkTypo3Fix]
+
+	task :install_minimal => [:rmdirStruct, :dirStruct, :getTarballs ,:unpackt3,  "env:touchinst","db:flush_force", :linkTypo3Fix]
+
 	desc 'desc: show available TYPO3 versions'
 	task :versions do
 		print Typo3Helper::get_typo3_versions

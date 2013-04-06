@@ -26,8 +26,9 @@ typo3:
     sysExtList: 
        - cms
        - version
- #      - tsconfig_help
- #      - context_help
+       - em
+       - tsconfig_help
+       - context_help
        - extra_page_cm_options
        - impexp
        - sys_note
@@ -36,7 +37,7 @@ typo3:
        - tstemplate_info
        - tstemplate_objbrowser
        - tstemplate_analyzer
-#     - func_wizards
+       - func_wizards
        - wizard_crpages
        - wizard_sortpages
        - lowlevel
@@ -45,13 +46,13 @@ typo3:
        - beuser
        - aboutmodules
        - setup
-#       - taskcenter
+       - taskcenter
        - info_pagetsconfig
        - viewpage
        - rtehtmlarea
        - css_styled_content
        - t3skin
-#       - t3editor
+       - t3editor
        - reports 
        - extbase
 
@@ -91,7 +92,7 @@ beuser:
    admin:
       username: admin
       password: password
-      admin: true
+      admin: 1
       email: admin@mysite.com
 
 TYPO3_CONF_VARS_EXT:

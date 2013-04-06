@@ -72,9 +72,12 @@ We are developing a fully functional vagrant/chef-solo example. Read further ins
 ## Limitations
 
 * No support yet fot TYPO3 6.x.x
+* No support yet fot TYPO3 4.6.x
+* No support yet fot TYPO3 4.5.x
 
 ## Requirements
 * Rake
+* gem nokogiri
 * webserver allowing symlinks
 * mysql
 
