@@ -1,6 +1,14 @@
 require 'spec_helper'
 
 describe Typo3Helper do
+	describe '.get_ext_list_from_config_and_extdirs' do
+		it "should return all configured extensions" do
+			extList = Typo3Helper.get_ext_list_from_config_and_extdirs
+			extList.should include('cms')
+			extList.should include('templavoila')
+			extList.should include('lsd_deployt3iu')
+		end
+	end
 	describe '.get_typo3_versions' do
 		it "should return a string including 4.7.1" do
 			versions = Typo3Helper.get_typo3_versions

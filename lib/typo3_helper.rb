@@ -65,6 +65,10 @@ class Typo3Helper
 		extList = []
 		extList.concat(CONFIG['typo3']['sysExtList'])
 
+		CONFIG['extSingles'].each {|key,hash|
+			extList << key
+		}
+
 		extDest = File.join(DT3CONST['DUMMYDIR'],"typo3conf","ext") 
 
 		Dir.foreach(File.join("extBundles")) {|rdir| 
@@ -199,5 +203,17 @@ class Typo3Helper
 		DT3Div.downloadTo('typo3.org','/fileadmin/ter/extensions.xml.gz','web/dummy/typo3temp/extensions.xml.gz')
 		system('gunzip -c web/dummy/typo3temp/extensions.xml.gz > web/dummy/typo3temp/extensions.xml');
 		return true
+	end
+
+	def self.last_minor_version(versions, majorversion)
+		list = []
+		versions.each do |line|
+			if(line[15,3]==majorversion) 
+				if(line.chomp[19,2].to_s.match(/\A[+-]?\d+?(\.\d+)?\Z/))
+					list << sprintf('%02d',line.chomp[19,2])
+				end
+			end
+		end
+		return majorversion+"."+list.sort.reverse[0].to_i.to_s
 	end
 end

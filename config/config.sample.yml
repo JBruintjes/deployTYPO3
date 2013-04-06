@@ -7,7 +7,7 @@
 deploymentName: nil
 typo3:
     # show all versions with rake t3_versions
-    t3version: nil
+    t3version: 4.7.10
 
     dbname: nil
     dbuser: nil

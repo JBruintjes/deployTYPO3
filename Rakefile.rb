@@ -78,6 +78,7 @@ webDir = File.join("web")
 extBundlesDir = File.join("extBundles")
 rootFilesBundlesDir = File.join("rootFilesBundles")
 extSinglesDir = File.join("extBundles","extSingles")
+extSinglesDir = File.join("web","dummy",'typo3conf','ext')
 typo3sourceDir = File.join("typo3source")
 trackedPathsDir = File.join("trackedPaths")
 structDirs = [webDir, extBundlesDir, typo3sourceDir, trackedPathsDir, rootFilesBundlesDir]
@@ -582,6 +583,7 @@ end
 
 task :linkExtSingles do
 end
+
 task :linkExtSinglesOLD do
 	print "linking single extensions"
 	print "\n"
@@ -704,6 +706,18 @@ namespace :t3 do
 	task :versions do
 		print Typo3Helper::get_typo3_versions
 	end
+
+	desc 'desc: show last TYPO3 versions'
+	task :lastversions do
+		versions= Typo3Helper::get_typo3_versions
+		print Typo3Helper::last_minor_version(versions,'4.4') +"\n"
+		print Typo3Helper::last_minor_version(versions,'4.5') +"\n"
+		print Typo3Helper::last_minor_version(versions,'4.6') +"\n"
+		print Typo3Helper::last_minor_version(versions,'4.7') +"\n"
+		print Typo3Helper::last_minor_version(versions,'6.0') +"\n"
+
+	end
+
 end
 
 namespace :dev do 
@@ -738,4 +752,6 @@ namespace :test do
 	task :all do
 		system('rspec spec')
 	end
+
+
 end
