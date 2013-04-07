@@ -35,6 +35,7 @@ require 'net/http'
 require 'rubygems'
 require 'nokogiri'
 require "base64"
+require 'php_serialize'
 
 require 'lib/load_config'
 require 'lib/init_dt3'
@@ -155,41 +156,10 @@ end
 
 namespace :init do 
 	task :localconf_gen do
-		#TODO
-		#set site name
-		#check db is set
-		#else ignore
-
 		print "Generating initial localconf.php\n"
-
-		extList = Typo3Helper::get_ext_list_from_config_and_extdirs
-		extList.uniq
-		Typo3Helper::setLocalconfExtList(extList,DT3CONST['TYPO3_LOCALCONF_FILE'])
-
-		#TODO do not append but replace
-		appendCode = """
-# deployTYPO3 was here 
-# read more about it: https://github.com/Lingewoud/deployTYPO3 
-$typo_db_username = '#{CONFIG['typo3']['dbuser']}';   	//  Modified or inserted by deployTYPO3
-$typo_db_password = '#{CONFIG['typo3']['dbpass']}';   	// Modified or inserted by deployTYPO3
-$typo_db_host = '#{CONFIG['typo3']['dbhost']}';    		//  Modified or inserted by deployTYPO3
-$typo_db = '#{CONFIG['typo3']['dbname']}';				//  Modified or inserted by deployTYPO3
-"""
-		if File.file?(DT3CONST['TYPO3_LOCALCONF_FILE']) 
-			last_line = 0
-			file = File.open(DT3CONST['TYPO3_LOCALCONF_FILE'], 'r+')
-			file.each { last_line = file.pos unless file.eof? }
-			file.seek(last_line, IO::SEEK_SET)
-			file.write(appendCode)
-			file.write("?>")
-			file.close
-		else
-			print "file does not exist: "+	DT3CONST['TYPO3_LOCALCONF_FILE'] + "\n"
-		end
-
+		Typo3Helper::create_init_localconf
 		Rake::Task["env:flush_cache"].invoke
 	end
-
 end
 
 namespace :env do

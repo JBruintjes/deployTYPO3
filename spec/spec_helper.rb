@@ -5,9 +5,9 @@ require 'rss/1.0'
 require 'rss/2.0'
 require 'open-uri'
 require 'net/http'
-#require 'xmlsimple'
 require 'nokogiri'
 require "base64"
+require 'php_serialize'
 
 require 'lib/load_config'
 require 'lib/init_dt3'

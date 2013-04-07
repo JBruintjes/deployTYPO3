@@ -171,6 +171,55 @@ class Typo3Helper
 		return dbsettings.split(' ');
 	end
 
+	def self.create_init_localconf
+
+		#TODO
+		#// Default password is "joh316" :
+		#$TYPO3_CONF_VARS['BE']['installToolPassword'] = 'bacb98acf97e0b6112b1d1b650b84971';
+
+		self.setLocalconfSiteName(CONFIG['deploymentName'],DT3CONST['TYPO3_LOCALCONF_FILE'])
+
+		extList = self::get_ext_list_from_config_and_extdirs
+		extList.uniq
+		self::setLocalconfExtList(extList,DT3CONST['TYPO3_LOCALCONF_FILE'])
+
+		extConf = ''
+		CONFIG['TYPO3_CONF_VARS_EXT']['extConf'].each {|key,arr|
+			extConf += "$TYPO3_CONF_VARS['EXT']['extConf']['#{key}'] = '#{PHP.serialize(arr)}';\n"
+		}
+
+		#$TYPO3_CONF_VARS['EXT']['extConf']['dam'] = 'a:7:{s:8:"tsconfig";s:7:"default";s:13:"file_filelist";s:1:"0";s:15:"hideMediaFolder";s:1:"0";s:8:"mediatag";s:1:"1";s:15:"htmlAreaBrowser";s:1:"1";s:17:"disableVersioning";s:1:"0";s:5:"devel";s:1:"0";}
+
+	#	p PHP.unserialize('a:7:{s:8:"tsconfig";s:7:"default";s:13:"file_filelist";s:1:"0";s:15:"hideMediaFolder";s:1:"0";s:8:"mediatag";s:1:"1";s:15:"htmlAreaBrowser";s:1:"1";s:17:"disableVersioning";s:1:"0";s:5:"devel";s:1:"0";}')
+
+		#TODO do not append but replace
+		appendCode = """
+# deployTYPO3 was here 
+# read more about it: https://github.com/Lingewoud/deployTYPO3 
+
+$TYPO3_CONF_VARS['SYS']['compat_version'] = '#{DT3CONST['T3VERSION']['MAJOR']}.#{DT3CONST['T3VERSION']['MINOR']}';
+
+$typo_db_username = '#{CONFIG['typo3']['dbuser']}';   	//  Modified or inserted by deployTYPO3
+$typo_db_password = '#{CONFIG['typo3']['dbpass']}';   	// Modified or inserted by deployTYPO3
+$typo_db_host = '#{CONFIG['typo3']['dbhost']}';    		//  Modified or inserted by deployTYPO3
+$typo_db = '#{CONFIG['typo3']['dbname']}';				//  Modified or inserted by deployTYPO3
+
+#{extConf}
+		"""
+
+		if File.file?(DT3CONST['TYPO3_LOCALCONF_FILE']) 
+			last_line = 0
+			file = File.open(DT3CONST['TYPO3_LOCALCONF_FILE'], 'r+')
+			file.each { last_line = file.pos unless file.eof? }
+			file.seek(last_line, IO::SEEK_SET)
+			file.write(appendCode)
+			file.write("?>")
+			file.close
+		else
+			print "file does not exist: "+	DT3CONST['TYPO3_LOCALCONF_FILE'] + "\n"
+		end
+	end
+
 	def self.setLocalconfDbSettings(db,user,pass,host='localhost',outfile='web/dummy/typo3conf/localconf.new.php')
 		text = File.read(DT3CONST['TYPO3_LOCALCONF_FILE'])
 		text = text.gsub(/^\$typo_db_password\ .*/, "$typo_db_password = '"+pass+"'; //set by Deploy TYPO3")
@@ -197,6 +246,13 @@ class Typo3Helper
 
 	def self.add_to_localconf_extlist(extList)
 
+	end
+
+	def self.setLocalconfSiteName(sitename,outfile='web/dummy/typo3conf/localconf.new.php')
+		newconf= "$TYPO3_CONF_VARS['SYS']['sitename'] = '#{sitename}'"
+		text = File.read(DT3CONST['TYPO3_LOCALCONF_FILE'])
+		text = text.gsub(/^\$TYPO3_CONF_VARS\['SYS'\]\['sitename'\].*/, newconf+"; //set by Deploy TYPO3")
+		File.open(outfile, "w") {|file| file.puts text}
 	end
 
 	def self.download_ext_xml

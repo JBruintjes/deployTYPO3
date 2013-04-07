@@ -100,6 +100,8 @@ TYPO3_CONF_VARS_EXT:
       p3core_refx:
          refxAddress: 172.16.145.1:3000
          pas3RemoteDummyRoot: /Volumes/pas3/dummy
+      dam:
+         file_filelist: 0
 
 TYPO3_CONF_VARS_GFX:
    TTFdpi: 96
