@@ -16,6 +16,7 @@ require 'lib/dt3_div'
 require 'lib/typo3_helper'
 require 'lib/dt3_mysql'
 require 'lib/expandt3x.rb'
+require 'lib/helpinfo.rb'
 
 
 CONFIG = LoadConfig::load_config

@@ -1,30 +1,47 @@
 class InitDT3
 	def self.load_constants
 
-		t3const = Hash.new
+		dt3const = Hash.new
 
-		t3const['VERSION'] = File.read('VERSION').strip
-		t3const['ROOTDIR'] = Dir.pwd
-		t3const['JOINEDSQL'] = 'joined.sql'
-		t3const['DUMMYDIR'] = File.join('web','dummy') 
+		dt3const['VERSION'] = File.read('VERSION').strip
+		dt3const['ROOTDIR'] = Dir.pwd
+		dt3const['JOINEDSQL'] = 'joined.sql'
+		dt3const['DUMMYDIR'] = File.join('web','dummy') 
 
-		# version
+		# VERSION
 		t3vers_list = CONFIG['typo3']['t3version'].split('.')
-p		t3vers_list
-		t3const['T3VERSION'] = Hash.new
-		t3const['T3VERSION']['MAJOR'] = t3vers_list[0]
-		t3const['T3VERSION']['MINOR'] = t3vers_list[1]
+		dt3const['T3VERSION'] = Hash.new
+		dt3const['T3VERSION']['MAJOR'] = t3vers_list[0]
+		dt3const['T3VERSION']['MINOR'] = t3vers_list[1]
 
 		if(t3vers_list.count==3)
-			t3const['T3VERSION']['PATCH'] = t3vers_list[2]
+			dt3const['T3VERSION']['PATCH'] = t3vers_list[2]
 		else
-			t3const['T3VERSION']['PATCH'] = nil
+			dt3const['T3VERSION']['PATCH'] = nil
 		end
 
 		## TODO detect 6.x.x versions and use new filename
-		t3const['TYPO3_LOCALCONF_FILE'] = File.join(t3const['DUMMYDIR'],'typo3conf','localconf.php')
+		dt3const['TYPO3_LOCALCONF_FILE'] = File.join(dt3const['DUMMYDIR'],'typo3conf','localconf.php')
 
-		return t3const
+		#TODO REMOVE
+		dt3const['CURRENTDUMMY'] = 'dummy-allversions'
+		dt3const['CURRENTSRCTAR'] = 'typo3_src-'+CONFIG['typo3']['t3version']+'.tar.gz'
+
+		dt3const['RELDIRS'] = Hash.new
+		dt3const['RELDIRS']['CURRENTDUMMY']='dummy'
+		dt3const['RELDIRS']['CURRENTSRC'] = 'typo3_src-'+CONFIG['typo3']['t3version']
+		dt3const['RELDIRS']['EXTSINGLESDIR'] = File.join("web","dummy",'typo3conf','ext')
+
+		# All defined webdirectories
+		dt3const['ROOTDIRS'] = Hash.new
+		dt3const['ROOTDIRS']['WEB'] = File.join("web") 
+		dt3const['ROOTDIRS']['EXTBUNDLES'] = File.join("extBundles")
+		#dt3const['ROOTDIRS']['ROOTFILESBUNDLES'] = File.join("rootFilesBundles")
+		dt3const['ROOTDIRS']['TYPO3SOURCE'] = File.join("typo3source")
+		dt3const['ROOTDIRS']['TRACKEDPATHS'] = File.join("trackedPaths")
+		#dt3const['STRUCTDIRS'] = [webDir, extBundlesDir, typo3sourceDir, trackedPathsDir, rootFilesBundlesDir]
+
+		return dt3const
 	end
 end
 
