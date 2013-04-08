@@ -33,7 +33,7 @@ class Typo3Helper
 		self.init_php_security_bypass
 
 		cmd = ''
-		CONFIG['beuser'].each {|k,u|
+		CONFIG['TYPO3_POPULATE']['beuser'].each {|k,u|
 			cmd += "web/dummy/typo3/cli_dispatch.phpsh lsd_deployt3iu add_beuser -u #{u['username']} -p #{u['password']} -a #{u['admin']} -e #{u['email']};"
 		}
 
@@ -62,10 +62,11 @@ class Typo3Helper
 
 	def self.get_ext_list_from_config_and_extdirs
 
-		extList = []
-		extList.concat(CONFIG['typo3']['sysExtList'])
+		#extList = []
+		#extList.concat(CONFIG['EXT']['SYSTEM'])
+		extList = CONFIG['EXT']['SYSTEM']
 
-		CONFIG['extSingles'].each {|key,hash|
+		CONFIG['EXT']['REMOTE_SINGLES'].each {|key,hash|
 			extList << key
 		}
 
@@ -96,7 +97,7 @@ class Typo3Helper
 
 		extList.each { | extName |
 			extBase = File.join(DT3CONST['DUMMYDIR'],"typo3conf","ext") 
-		if CONFIG['typo3']['sysExtList'].include? extName
+		if CONFIG['EXT']['SYSTEM'].include? extName
 			extBase = File.join(DT3CONST['DUMMYDIR'],"typo3","sysext") 
 		else
 			extBase = File.join(DT3CONST['DUMMYDIR'],"typo3conf","ext") 
@@ -177,20 +178,25 @@ class Typo3Helper
 		#// Default password is "joh316" :
 		#$TYPO3_CONF_VARS['BE']['installToolPassword'] = 'bacb98acf97e0b6112b1d1b650b84971';
 
-		self.setLocalconfSiteName(CONFIG['deploymentName'],DT3CONST['TYPO3_LOCALCONF_FILE'])
+		self.setLocalconfSiteName(CONFIG['DEPLOYMENTNAME'],DT3CONST['TYPO3_LOCALCONF_FILE'])
 
 		extList = self::get_ext_list_from_config_and_extdirs
 		extList.uniq
 		self::setLocalconfExtList(extList,DT3CONST['TYPO3_LOCALCONF_FILE'])
 
-		extConf = ''
-		CONFIG['TYPO3_CONF_VARS_EXT']['extConf'].each {|key,arr|
-			extConf += "$TYPO3_CONF_VARS['EXT']['extConf']['#{key}'] = '#{PHP.serialize(arr)}';\n"
+		key1=''
+		typo3_conf_vars = ''
+		CONFIG['TYPO3_CONF_VARS'].each {|key,arr|
+		key1=key	
+		arr.each {|key2,val|
+				typo3_conf_vars += "$TYPO3_CONF_VARS['#{key1}']['#{key2}'] = '#{val}';\n"
+			}
 		}
 
-		#$TYPO3_CONF_VARS['EXT']['extConf']['dam'] = 'a:7:{s:8:"tsconfig";s:7:"default";s:13:"file_filelist";s:1:"0";s:15:"hideMediaFolder";s:1:"0";s:8:"mediatag";s:1:"1";s:15:"htmlAreaBrowser";s:1:"1";s:17:"disableVersioning";s:1:"0";s:5:"devel";s:1:"0";}
+		CONFIG['TYPO3_CONF_VARS_EXT_EXTCONF'].each {|key,arr|
+			typo3_conf_vars += "$TYPO3_CONF_VARS['EXT']['extConf']['#{key}'] = '#{PHP.serialize(arr)}';\n"
+		}
 
-	#	p PHP.unserialize('a:7:{s:8:"tsconfig";s:7:"default";s:13:"file_filelist";s:1:"0";s:15:"hideMediaFolder";s:1:"0";s:8:"mediatag";s:1:"1";s:15:"htmlAreaBrowser";s:1:"1";s:17:"disableVersioning";s:1:"0";s:5:"devel";s:1:"0";}')
 
 		#TODO do not append but replace
 		appendCode = """
@@ -199,12 +205,12 @@ class Typo3Helper
 
 $TYPO3_CONF_VARS['SYS']['compat_version'] = '#{DT3CONST['T3VERSION']['MAJOR']}.#{DT3CONST['T3VERSION']['MINOR']}';
 
-$typo_db_username = '#{CONFIG['typo3']['dbuser']}';   	//  Modified or inserted by deployTYPO3
-$typo_db_password = '#{CONFIG['typo3']['dbpass']}';   	// Modified or inserted by deployTYPO3
-$typo_db_host = '#{CONFIG['typo3']['dbhost']}';    		//  Modified or inserted by deployTYPO3
-$typo_db = '#{CONFIG['typo3']['dbname']}';				//  Modified or inserted by deployTYPO3
+$typo_db_username = '#{CONFIG['DB']['dbuser']}';   	//  Modified or inserted by deployTYPO3
+$typo_db_password = '#{CONFIG['DB']['dbpass']}';   	// Modified or inserted by deployTYPO3
+$typo_db_host = '#{CONFIG['DB']['dbhost']}';    		//  Modified or inserted by deployTYPO3
+$typo_db = '#{CONFIG['DB']['dbname']}';				//  Modified or inserted by deployTYPO3
 
-#{extConf}
+#{typo3_conf_vars}
 		"""
 
 		if File.file?(DT3CONST['TYPO3_LOCALCONF_FILE']) 

@@ -81,10 +81,6 @@ namespace :init do
 			err << 'ERROR: you must enter a typo3 version. Enter rake t3:versions to list all available versions'
 		end
 
-		if ENV['sitename'].nil?
-			err << 'ERROR: no sitename entered'
-		end
-
 		if ENV['dbname'].nil?
 			err << 'ERROR: no database name entered use dbname=yourdbname'
 		end
@@ -108,7 +104,7 @@ namespace :init do
 			end
 			print "\n"
 			print "Usage:\n"
-			print "rake conf_init sitename=SiteName t3version=4.x.x dbname=database dbuser=username dbpass=password dbhost=hostname"
+			print "rake init:conf t3version=4.x.x dbname=database dbuser=username dbpass=password dbhost=hostname"
 			print "\n"
 			print "\n"
 			exit
@@ -118,8 +114,7 @@ namespace :init do
 		print "\n"
 
 		text = File.read('config/config.sample.yml')
-		text = text.gsub(/deploymentName:\ .*/, "deploymentName: "+ENV['sitename'])
-		text = text.gsub(/t3version:\ .*/, "t3version: "+ENV['t3version'])
+		text = text.gsub(/TYPO3_VERSION:\ .*/, "TYPO3_VERSION: "+ENV['t3version'])
 		text = text.gsub(/dbname:\ .*/, "dbname: "+ENV['dbname'])
 		text = text.gsub(/dbuser:\ .*/, "dbuser: "+ENV['dbuser'])
 		text = text.gsub(/dbpass:\ .*/, "dbpass: "+ENV['dbpass'])
@@ -134,10 +129,10 @@ namespace :env do
 
 		deploymentName = ''
 
-		if(!CONFIG['deploymentName'])
+		if(!CONFIG['DEPLOYMENTNAME'])
 			deploymentName = 'noName-please-configure'
 		else
-			deploymentName = CONFIG['deploymentName']
+			deploymentName = CONFIG['DEPLOYMENTNAME']
 		end
 		
 
@@ -151,13 +146,13 @@ namespace :env do
 	desc 'desc: echo cron confguration'
 	task :cron do
 
-		livePath = File.expand_path(File.join(Dir.pwd,"..",'TYPO3Live-'+CONFIG['deploymentName']))
+		livePath = File.expand_path(File.join(Dir.pwd,"..",'TYPO3Live-'+CONFIG['DEPLOYMENTNAME']))
 
 		print "CRON SCHEDULAR CONFIGURATION"
 		print "\n"
 		print '*/5 * * * * root '+livePath+'/web/dummy/typo3/cli_dispatch.phpsh scheduler'
 		print "\n"
-		print "echo '*/5 * * * * root "+livePath+"/web/dummy/typo3/cli_dispatch.phpsh scheduler' > /etc/cron.d/typo3-"+CONFIG['deploymentName']
+		print "echo '*/5 * * * * root "+livePath+"/web/dummy/typo3/cli_dispatch.phpsh scheduler' > /etc/cron.d/typo3-"+CONFIG['DEPLOYMENTNAME']
 		print "\n"
 	end
 
@@ -193,7 +188,7 @@ namespace :env do
 		dbsetarr = Typo3Helper::get_db_settings()
 
 		print "\n"
-		print "TYPO3 Version: "+CONFIG['typo3']['t3version'] 
+		print "TYPO3 Version: "+CONFIG['TYPO3_VERSION'] 
 		print "\n"
 		print "Docroot directory: "+ FileUtils.pwd + '/web/' + DT3CONST['RELDIRS']['CURRENTDUMMY']
 		print "\n"
@@ -288,42 +283,50 @@ end
 namespace :ext do
 	desc 'desc: download all single extensions defined in config.yml'
 	task :singles_get do
-		if CONFIG['extSingles']
-			print "Downloading single extensions\n"
 
-			if not File.directory?(File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR']))
-				FileUtils.mkdir DT3CONST['RELDIRS']['EXTSINGLESDIR']
-			end
+		#extList.concat(CONFIG['EXT']['SYSTEM'])
+		singleList = Hash.new
+		singleList['lsd_deployt3iu'] =  Hash.new
+		singleList['lsd_deployt3iu']['type'] = 'git'
+		singleList['lsd_deployt3iu']['uri'] = 'https://github.com/Lingewoud/lsd_deployt3iu.git'
 
-			CONFIG['extSingles'].each {|key,hash|
-				if not File.directory?(File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key))
-					if(hash['type']=='git')
-						system("git clone " + hash['uri'] + " "+ File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key))
-					end
-					if(hash['type']=='ter')
-
-						srcurl ='typo3.org'
-						srcpath = '/extensions/repository/download/'+key+'/'+hash['version']+'/t3x/'
-						destpath = File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key+'.t3x')
-
-						DT3Div::downloadTo(srcurl,srcpath,destpath)
-
-						cmd = "/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php #{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'], key+'.t3x')}  #{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key)}"
-						system (cmd)
-
-						FileUtils.rm(File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key+'.t3x'))
-					end
-				end
-			}
+		if CONFIG['EXT']['REMOTE_SINGLES']
+			singleList.merge!(CONFIG['EXT']['REMOTE_SINGLES'])
 		end
+		print "Downloading single extensions\n\n"
+
+		if not File.directory?(File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR']))
+			FileUtils.mkdir DT3CONST['RELDIRS']['EXTSINGLESDIR']
+		end
+
+		singleList.each {|key,hash|
+			if not File.directory?(File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key))
+				if(hash['type']=='git')
+					system("git clone " + hash['uri'] + " "+ File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key))
+				end
+				if(hash['type']=='ter')
+
+					srcurl ='typo3.org'
+					srcpath = '/extensions/repository/download/'+key+'/'+hash['version']+'/t3x/'
+					destpath = File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key+'.t3x')
+
+					DT3Div::downloadTo(srcurl,srcpath,destpath)
+
+					cmd = "/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php #{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'], key+'.t3x')}  #{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key)}"
+					system (cmd)
+
+					FileUtils.rm(File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key+'.t3x'))
+				end
+			end
+		}
 	end
 
 	desc 'desc: purge all extSingles'
 	task :singles_purge do
-		if CONFIG['extSingles']
+		if CONFIG['EXT']['REMOTE_SINGLES']
 			print "Removing single extensions\n"
 
-			CONFIG['extSingles'].each {|key,hash|
+			CONFIG['EXT']['REMOTE_SINGLES'].each {|key,hash|
 				FileUtils.rm_r File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key), :force => true  
 			}
 		end
@@ -336,15 +339,14 @@ namespace :ext do
 
 	desc 'desc: Download all new extension bundles defined in config.yml'
 	task :bundles_get do
-		print "Downloading all new extension bundles\n"
+		print "Downloading all new extension bundles\n\n"
 
 		if not File.directory?(File.join("extBundles"))
 			FileUtils.mkdir "extBundles"
 		end
 
-		if(CONFIG['extBundles']) 
-			CONFIG['extBundles'].each {|key,hash|
-				print key
+		if(CONFIG['EXT']['REMOTE_BUNDLES']) 
+			CONFIG['EXT']['REMOTE_BUNDLES'].each {|key,hash|
 				if not File.directory?(File.join("extBundles",key))
 					if(hash['type']=='svn')
 						print("svn co " + hash['uri'] + " extBundles/"+ key)
@@ -490,6 +492,7 @@ namespace :inst do
 		Rake::Task['sub:linkExtBundles'].invoke
 		Rake::Task['sub:localconf_gen'].invoke
 		Rake::Task['sub:insertInitConf'].invoke
+		Rake::Task['sub:patch_php_append'].invoke
 		Rake::Task['env:touchinst'].invoke
 		DT3MySQL::flush_tables
 		Rake::Task['db:install'].invoke
@@ -507,6 +510,7 @@ namespace :inst do
 		Rake::Task['sub:linkExtBundles'].invoke
 		Rake::Task['sub:localconf_gen'].invoke
 		Rake::Task['sub:insertInitConf'].invoke
+		Rake::Task['sub:patch_php_append'].invoke
 		Rake::Task['env:touchinst'].invoke
 		DT3MySQL::flush_tables
 		Rake::Task['sub:linkTypo3Fix'].invoke
@@ -592,9 +596,8 @@ namespace :sub do
 
 	desc 'desc: downloaded dummy and source tarballs'
 	task :getTarballs do
-		sfmirror = CONFIG['typo3']['sfmirror']
-		sourceUrl = sfmirror+'.dl.sourceforge.net'
-		downloadLink='/project/typo3/TYPO3%20Source%20and%20Dummy/TYPO3%20'+CONFIG['typo3']['t3version']+'/typo3_src-'+CONFIG['typo3']['t3version']+'.tar.gz'
+		sourceUrl = CONFIG['SOURCEFORGE_MIRROR']+'.dl.sourceforge.net'
+		downloadLink='/project/typo3/TYPO3%20Source%20and%20Dummy/TYPO3%20'+CONFIG['TYPO3_VERSION']+'/typo3_src-'+CONFIG['TYPO3_VERSION']+'.tar.gz'
 
 		Net::HTTP.start(sourceUrl) { |http2|
 			resp2 = http2.get(downloadLink)
@@ -622,8 +625,8 @@ namespace :sub do
 			system('mv web/'+DT3CONST['CURRENTDUMMY']+' web/'+DT3CONST['RELDIRS']['CURRENTDUMMY'])
 		end
 
-		system('tar xzf typo3source/typo3_src-'+CONFIG['typo3']['t3version']+'.tar.gz -C web/')
-		system('ln -sf ../typo3_src-'+CONFIG['typo3']['t3version'] + ' '+ File.join("web",DT3CONST['RELDIRS']['CURRENTDUMMY'],'typo3_src'))
+		system('tar xzf typo3source/typo3_src-'+CONFIG['TYPO3_VERSION']+'.tar.gz -C web/')
+		system('ln -sf ../typo3_src-'+CONFIG['TYPO3_VERSION'] + ' '+ File.join("web",DT3CONST['RELDIRS']['CURRENTDUMMY'],'typo3_src'))
 	end
 
 	desc 'rmdirStruct: remove all but the scriptfiles files'
@@ -644,6 +647,31 @@ namespace :sub do
 		}
 	end
 
+	desc 'desc: append configured php code to configured files, usefull for overriding modules configurations'
+	task :patch_php_append do
+		if(CONFIG['PATCH']['PHP_FILE_APPEND'])
+			CONFIG['PATCH']['PHP_FILE_APPEND'].each {|key,valarr|
+				print 'Append task for: '+key+ "\n"
+				filename = 'web/'+DT3CONST['RELDIRS']['CURRENTDUMMY']+'/'+valarr['file']
+				appendCode = valarr['appendPHPCode']
+
+				if File.file?(filename) 
+					last_line = 0
+					file = File.open(filename, 'r+')
+					file.each { last_line = file.pos unless file.eof? }
+					file.seek(last_line, IO::SEEK_SET)
+					file.write(appendCode)
+					file.write("?>")
+					file.close
+				else
+					print "file does not exist: "+	filename + "\n"
+				end
+			}
+		end
+
+	end
+
+
 end
 
 namespace :dev do 
@@ -663,6 +691,14 @@ namespace :dev do
 		Rake::VersionTask.new
 		Rake::Task["version:bump"].invoke
 	end
+
+	desc 'desc: show config array'
+	task :showconf do
+		p CONFIG
+	end
+
+
+
 end
 
 namespace :test do 
@@ -732,29 +768,6 @@ namespace :depr do
 		}
 
 		print "\n"
-	end
-
-	desc 'desc: append configured php code to configured files, usefull for overriding modules configurations'
-	task :patch_append_php do
-
-		CONFIG['appendPHPToFile'].each {|key,valarr|
-			print 'Append task for: '+key+ "\n"
-			filename = 'web/'+DT3CONST['RELDIRS']['CURRENTDUMMY']+'/'+valarr['file']
-			appendCode = valarr['appendPHPCode']
-
-			if File.file?(filename) 
-				last_line = 0
-				file = File.open(filename, 'r+')
-				file.each { last_line = file.pos unless file.eof? }
-				file.seek(last_line, IO::SEEK_SET)
-				file.write(appendCode)
-				file.write("?>")
-				file.close
-			else
-				print "file does not exist: "+	filename + "\n"
-			end
-		}
-
 	end
 
 

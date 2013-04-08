@@ -21,7 +21,7 @@ class DT3MySQL
 	end
 
 	def self.create_mysql_base_command
-		cmd = self.create_mysql_base_command_with(CONFIG['typo3']['dbuser'],CONFIG['typo3']['dbhost'],CONFIG['typo3']['dbpass'],CONFIG['typo3']['dbname'])
+		cmd = self.create_mysql_base_command_with(CONFIG['DB']['dbuser'],CONFIG['DB']['dbhost'],CONFIG['DB']['dbpass'],CONFIG['DB']['dbname'])
 	end
 
 	def self.mysql_execute(sql)

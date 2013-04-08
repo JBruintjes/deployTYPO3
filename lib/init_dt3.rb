@@ -9,7 +9,7 @@ class InitDT3
 		dt3const['DUMMYDIR'] = File.join('web','dummy') 
 
 		# VERSION
-		t3vers_list = CONFIG['typo3']['t3version'].split('.')
+		t3vers_list = CONFIG['TYPO3_VERSION'].split('.')
 		dt3const['T3VERSION'] = Hash.new
 		dt3const['T3VERSION']['MAJOR'] = t3vers_list[0]
 		dt3const['T3VERSION']['MINOR'] = t3vers_list[1]
@@ -25,11 +25,11 @@ class InitDT3
 
 		#TODO REMOVE
 		dt3const['CURRENTDUMMY'] = 'dummy-allversions'
-		dt3const['CURRENTSRCTAR'] = 'typo3_src-'+CONFIG['typo3']['t3version']+'.tar.gz'
+		dt3const['CURRENTSRCTAR'] = 'typo3_src-'+CONFIG['TYPO3_VERSION']+'.tar.gz'
 
 		dt3const['RELDIRS'] = Hash.new
 		dt3const['RELDIRS']['CURRENTDUMMY']='dummy'
-		dt3const['RELDIRS']['CURRENTSRC'] = 'typo3_src-'+CONFIG['typo3']['t3version']
+		dt3const['RELDIRS']['CURRENTSRC'] = 'typo3_src-'+CONFIG['TYPO3_VERSION']
 		dt3const['RELDIRS']['EXTSINGLESDIR'] = File.join("web","dummy",'typo3conf','ext')
 
 		# All defined webdirectories

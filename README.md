@@ -18,13 +18,15 @@ Sponsored by [PAS3](http://www.pas3.com) and [Lingewoud](http://www.lingewoud.co
 * Installation of TYPO3 dummy and source packages
 * Downloading and installing remote extensions
 * Downloading and installing extension bundles (directory with a set of extensions)
-* Remote TER, Git and Subversion sources
+* Remote TER, Git sources
 * SQL generation using TYPO3 Install API
 * No SQL Image needed, only vanilla ext_tables.sql
 * T3x extraction
+* Extension EM Configuration
+* Localconf GLOBAL configuration
 * Cron-task preparation
 * Query typo3.org for available versions
-* Support for TYPO3 4.5.x - 4.7.x
+* Support for TYPO3 4.7.x
 * Environment cloning
 * Database backups
 
@@ -51,17 +53,15 @@ cd deployTYPO3
 
 # Create an initial config.yml file that will be your TYPO3 recipe.
 # 
-# rake conf_init
+# rake init:conf
 #  usage: 
-#  rake conf_init sitename=[Site Name] t3version=[4.x.x] dbname=[database] dbuser=[username] dbpass=[password] dbhost=[hostname]
+#  rake init:conf t3version=[4.x.x] dbname=[database] dbuser=[username] dbpass=[password] dbhost=[hostname]
 #
 # e.g.
-rake conf_init sitename=MySite t3version=4.7.9 dbname=typo3_db dbuser=typo3_db dbpass=test dbhost=localhost
+rake init:conf t3version=4.7.9 dbname=typo3_db dbuser=typo3_db dbpass=test dbhost=localhost
 
-rake t3:install
+rake inst:all
 ```
-
-***NOTE*** For now by default an admin BE-user is created with username ```admin``` and password ```password```
 
 When the scripts has finished point your browser ```http://yourhost.com/web/dummy``` or ```http://yourhost.com/web/dummy/typo3```. You can now use your fresh vanilla TYPO3
 
@@ -71,13 +71,15 @@ We are developing a fully functional vagrant/chef-solo example. Read further ins
 
 ## Limitations
 
+Currently, deployTYPO3 only supports TYPO3 v4.7.x, we will add other versions soon.
+
 * No support yet fot TYPO3 6.x.x
 * No support yet fot TYPO3 4.6.x
 * No support yet fot TYPO3 4.5.x
 
 ## Requirements
 * Rake
-* gem nokogiri
+* See Gemfile for needed gems
 * webserver allowing symlinks
 * mysql
 
@@ -89,34 +91,38 @@ Enter ```rake help``` for an up to date list of most important commands
 
 ```
 $ rake help
-(in /var/www/deployTYPO3)
-Using sample configuration, please replace with your own
+(in /var/customers/webs/pim/deployTYPO3)
 
-rake conf_init          # desc: generates a config.yml
-rake db:backup          # desc: active database to sql-file
-rake db:copy            # desc: copy complete database structure and schema to a new database.
-rake db:flush           # desc: delete all tables
-rake db:install         # desc: Install all SQL files
-rake db:showtables      # desc: show all tables
-rake env:copy           # desc: copy complete typo3 environment including deployment scripts and database
-rake env:cron           # desc: echo cron confguration
-rake env:flush_cache    # desc: remove typo3conf cache & temp files
-rake env:info           # desc: Show main TYPO3 configured settings
-rake env:livelink       # desc: make link a dir lower indicating this is live
-rake env:purge          # desc: purges all typo3 files and extensions.
-rake env:relink         # desc: relink extension bundles and extensions
-rake env:touchinst      # desc: Create a file web/dummy/typo3conf/ENABLE_INSTALL_TOOL
-rake env:upgrade_src    # desc: upgrade to newer version
-rake ext:bundles_get    # desc: Download all new extension bundles defined in config.yml
-rake ext:bundles_purge  # desc: purge all extBundles
-rake ext:singles_get    # desc: download all single extensions defined in config.yml
-rake ext:singles_purge  # desc: purge all extSingles
-rake help               # desc: show main tasks
-rake patch_append_php   # desc: append configured php code to configured files, usefull for overriding modules configurations
-rake t3:install         # desc: do a complete purge and install of the TYPO3 environment
-rake t3:versions        # desc: show available TYPO3 versions
+DeployTYPO3 version 1.5.1
 
-DeployTYPO3 version 1.5
+rake help                       # desc: show main tasks
+rake help_exp                   # desc: show all including dev and sub tasks
+
+rake init:conf                  # desc: generates a config.yml
+
+rake inst:all                   # desc: purge and install the complete configured TYPO3 environment
+rake inst:man                   # desc: purge and download the complete environment but do not setup the localconf & db.
+rake inst:min                   # desc: purge and install the configured TYPO3 environment without external extensions
+
+rake env:copy                   # desc: copy complete typo3 environment including deployment scripts and database
+rake env:cron                   # desc: echo cron confguration
+rake env:flush_cache            # desc: remove typo3conf cache & temp files
+rake env:info                   # desc: Show main TYPO3 configured settings
+rake env:livelink               # desc: make link a dir lower indicating this is live
+rake env:purge                  # desc: purges all typo3 files and extensions.
+rake env:relink                 # desc: relink extension bundles and extensions
+rake env:touchinst              # desc: Create a file web/dummy/typo3conf/ENABLE_INSTALL_TOOL
+rake env:upgrade_src            # desc: upgrade to newer version
+
+rake db:backup                  # desc: active database to sql-file
+rake db:copy                    # desc: copy complete database structure and schema to a new database.
+rake db:flush                   # desc: delete all tables
+rake db:install                 # desc: Install all SQL files
+rake db:tables                  # desc: show all tables
+
+rake t3org:lastversions         # desc: show last TYPO3 versions
+rake t3org:versions             # desc: show available TYPO3 versions
+
 ```
 
 ## Contributing to deployTYPO3
@@ -148,13 +154,3 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 This copyright notice MUST APPEAR in all copies of the script!
-
-
-
-
-
-
-
-
-
-

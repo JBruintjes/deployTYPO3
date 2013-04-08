@@ -4,122 +4,122 @@
 # Place all environment configfuration values here #
 ####################################################
 
-deploymentName: nil
-typo3:
-    # show all versions with rake t3_versions
-    t3version: 4.7.10
+DEPLOYMENTNAME: deployTYPO3 Site
 
-    dbname: nil
-    dbuser: nil
-    dbpass: nil
-    dbhost: nil
+# If you enter 4.7 deployTYPO3 will use the latest patch version
+TYPO3_VERSION: 4.7.10
 
-    # Choose one of the sourceforge mirrors:
-    # North America:        iweb, superb-sea2, voxel, cdnetworks-us-1, cdnetworks-us-2
-    # South America:        ufpr,
-    # Europe:               dfn, freefr ,garr, mesh, kent, heanet, surfnet, ovh, sunet, switch, citylan, ignum, netcologne,
-    # Australia:            waix, transact, internode, aarnet,
-    # Asia:                 jaist, ncu, nchc, cdnetworks-kr-1, cdnetworks-kr-2,
-    # Africa:               tenet    
-    sfmirror: netcologne
+# A list of mirrors can be found at http://sourceforge.net/apps/trac/sourceforge/wiki/Mirrors
+# Use mirror Short Name. 
+SOURCEFORGE_MIRROR: netcologne
 
-    sysExtList: 
-       - cms
-       - version
-       - em
-       - tsconfig_help
-       - context_help
-       - extra_page_cm_options
-       - impexp
-       - sys_note
-       - tstemplate
-       - tstemplate_ceditor
-       - tstemplate_info
-       - tstemplate_objbrowser
-       - tstemplate_analyzer
-       - func_wizards
-       - wizard_crpages
-       - wizard_sortpages
-       - lowlevel
-       - install
-       - belog
-       - beuser
-       - aboutmodules
-       - setup
-       - taskcenter
-       - info_pagetsconfig
-       - viewpage
-       - rtehtmlarea
-       - css_styled_content
-       - t3skin
-       - t3editor
-       - reports 
-       - extbase
+# Enter database user credentials of existing database
+DB:
+   dbname: nil
+   dbuser: nil
+   dbpass: nil
+   dbhost: nil
 
-extBundles:
-   pas3core:
-      type: git # git/svn/?
-      uri: https://github.com/PAS3/typo3-pas3-core.git 
-      branch: master                                             # not implemented yet
-   lwinfra:
-      type: svn
-      uri: https://pim@svn.lingewoud.net/svn/typo3ext/lwinfra
+TYPO3_POPULATE:
+   beuser:
+      admin:
+         username: admin
+         password: password
+         admin: 1
+         email: admin@mysite.com
+      kasper:
+         username: user
+         password: password
+         admin: 0
+         email: kasper@mysite.com
 
-extSingles:
-   lsd_deployt3iu:   
-      type: git
-      uri: https://github.com/Lingewoud/lsd_deployt3iu.git
-   templavoila:
-      type: ter # git/svn/ter/t3x/zip/?                           # ter/git only implemented
-      uri: templavoila
-      version: 1.8.0
-   cc_textfunc:
-      type: git
-      uri: https://github.com/mipmip/cc_textfunc.git
-   static_info_tables:
-      type: ter 
-      uri: static_info_tables
-      version: 2.3.1
-   dam:
-      type: ter
-      uri: dam
-      version: 1.3.1
-
-TYPO3_CONF_VARS_SYS:
-   sitename: My TYPO3 Site
-
-beuser:
-   admin:
-      username: admin
-      password: password
-      admin: 1
-      email: admin@mysite.com
-
-TYPO3_CONF_VARS_EXT:
-   extConf:
-      p3core_refx:
-         refxAddress: 172.16.145.1:3000
-         pas3RemoteDummyRoot: /Volumes/pas3/dummy
+EXT:
+   SYSTEM: 
+      - cms
+      - em
+      - version
+      - tsconfig_help
+      - context_help
+      - extra_page_cm_options
+      - impexp
+      - sys_note
+      - tstemplate
+      - tstemplate_ceditor
+      - tstemplate_info
+      - tstemplate_objbrowser
+      - tstemplate_analyzer
+      - func
+      - func_wizards
+      - wizard_crpages
+      - wizard_sortpages
+      - lowlevel
+      - install
+      - belog
+      - beuser
+      - aboutmodules
+      - setup
+      - taskcenter
+      - info_pagetsconfig
+      - viewpage
+      - rtehtmlarea
+      - css_styled_content
+      - t3skin
+      - t3editor
+      - reports 
+      - extbase
+      - filelist
+   REMOTE_SINGLES:
+      templavoila:
+         type: ter
+         version: 1.8.0
+      cc_textfunc:
+         type: git
+         uri: https://github.com/mipmip/cc_textfunc.git
+      static_info_tables:
+         type: ter
+         version: 2.3.1
+      devlog:
+         type: ter
+         version: 2.9.4
       dam:
-         file_filelist: 0
+         type: ter
+         version: 1.3.1
+      cooluri:
+         type: ter
+         version: 1.0.32
+   REMOTE_BUNDLES:
+      pas3core:
+         type: git
+         uri: https://github.com/PAS3/typo3-pas3-core.git
 
-TYPO3_CONF_VARS_GFX:
-   TTFdpi: 96
-   im_noFramePrepended: im_noFramePrepended
-   gdlib_png: 1
-   png_truecolor: 1
-   jpg_quality: 90
-   thumbnails_png: 1
-   gdlib_2: 1
+TYPO3_CONF_VARS:
+   SYS:
+      sitename: deployTYPO3 Demo Website 
+   BE:
+      installToolPassword: bacb98acf97e0b6112b1d1b650b84971
+   GFX:
+      TTFdpi: 96
+      im_noFramePrepended: im_noFramePrepended
+      gdlib_png: 1
+      png_truecolor: 1
+      jpg_quality: 90
+      thumbnails_png: 1
+      gdlib_2: 1
 
-appendPHPToFile:
-    tools:
-        file: typo3/mod/tools/conf.php
-        appendPHPCode: |
-            $MCONF['access']='user,group';
-#    cooluri:
-#        file: typo3conf/ext/cooluri/mod1/conf.php
-#        appendPHPCode: |
-#            $MCONF['access']='user,group';
+TYPO3_CONF_VARS_EXT_EXTCONF:
+   p3core_refx:
+      refxAddress: 172.16.145.1:3000
+      pas3RemoteDummyRoot: /Volumes/pas3/dummy
+   dam:
+      file_filelist: 1
 
-
+PATCH:
+   PHP_FILE_APPEND:
+       tools:
+           file: typo3/mod/tools/conf.php
+           appendPHPCode: |
+               $MCONF['access']='user,group';
+       cooluri:
+           file: typo3conf/ext/cooluri/mod1/conf.php
+           appendPHPCode: |
+               $MCONF['access']='user,group';

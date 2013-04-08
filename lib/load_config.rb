@@ -1,7 +1,5 @@
 require "yaml"
 
-
-
 class LoadConfig
 	def self.load_config
 		if File.file?("config/config.yml")
