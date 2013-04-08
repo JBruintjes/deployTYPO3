@@ -30,6 +30,8 @@ Sponsored by [PAS3](http://www.pas3.com) and [Lingewoud](http://www.lingewoud.co
 * Environment cloning
 * Database backups
 
+Have a look at the config.sample.yml to see the possibilities: https://github.com/Lingewoud/deployTYPO3/blob/master/config/config.sample.yml
+
 ## Advantages
 * No need to maintain SQL-images
 * Enables create and maintain TYPO3 distributions. 
