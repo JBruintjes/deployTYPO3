@@ -21,13 +21,6 @@ require 'lib/helpinfo.rb'
 
 CONFIG = LoadConfig::load_config
 DT3CONST = InitDT3::load_constants
-describe LoadConfig do
-	describe '.load_config' do
-		it "should return the yaml config as array" do
-			LoadConfig.load_config.should include("deploymentName")
-		end
-	end
-end
 
 def describe_rake_task(task_name, filename, &block)
 	require "rake"

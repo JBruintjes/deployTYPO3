@@ -576,7 +576,6 @@ namespace :sub do
 				}
 			end
 		}
-
 	end
 
 	desc 'desc: add initial config to localconf'
@@ -596,16 +595,12 @@ namespace :sub do
 
 	desc 'desc: downloaded dummy and source tarballs'
 	task :getTarballs do
-		sourceUrl = CONFIG['SOURCEFORGE_MIRROR']+'.dl.sourceforge.net'
-		downloadLink='/project/typo3/TYPO3%20Source%20and%20Dummy/TYPO3%20'+CONFIG['TYPO3_VERSION']+'/typo3_src-'+CONFIG['TYPO3_VERSION']+'.tar.gz'
+		srcurl = CONFIG['SOURCEFORGE_MIRROR']+'.dl.sourceforge.net'
+		srcpath='/project/typo3/TYPO3%20Source%20and%20Dummy/TYPO3%20'+CONFIG['TYPO3_VERSION']+'/typo3_src-'+CONFIG['TYPO3_VERSION']+'.tar.gz'
+		DT3Div::downloadTo(srcurl,srcpath,"typo3source/"+DT3CONST['CURRENTSRCTAR'])
 
-		Net::HTTP.start(sourceUrl) { |http2|
-			resp2 = http2.get(downloadLink)
-			open("typo3source/"+DT3CONST['CURRENTSRCTAR'], "w+") { |file2|
-				file2.write(resp2.body)
-			}
-		}
-
+		srcpath='/project/typo3/TYPO3%20Source%20and%20Dummy/TYPO3%20'+CONFIG['TYPO3_VERSION']+'/dummy-'+CONFIG['TYPO3_VERSION']+'.tar.gz'
+		DT3Div::downloadTo(srcurl,srcpath,"typo3source/"+DT3CONST['CURRENTDUMMYTAR'])
 	end
 
 	desc 'desc: unpack downloaded dummy and source tarballs'
@@ -621,7 +616,9 @@ namespace :sub do
 		end
 
 		if not File.directory?(File.join('web', DT3CONST['RELDIRS']['CURRENTDUMMY']))
-			system('tar xzf '+DT3CONST['CURRENTDUMMY']+'.tar.gz -C web/')
+			#system('tar xzf dummy-allversions.tar.gz -C web/')
+			#system('mv web/dummy-allversions web/'+DT3CONST['RELDIRS']['CURRENTDUMMY'])
+			system('tar xzf typo3source/'+DT3CONST['CURRENTDUMMYTAR']+' -C web/')
 			system('mv web/'+DT3CONST['CURRENTDUMMY']+' web/'+DT3CONST['RELDIRS']['CURRENTDUMMY'])
 		end
 

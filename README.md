@@ -127,6 +127,10 @@ rake t3org:versions             # desc: show available TYPO3 versions
 
 ```
 
+## Documentation
+
+See the ```./docs``` directory for more documentation and licence documents.
+
 ## Contributing to deployTYPO3
 Please report issues and pull-requests at [https://github.com/Lingewoud/deployTYPO3](https://github.com/Lingewoud/deployTYPO3)
 

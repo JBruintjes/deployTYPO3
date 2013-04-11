@@ -1,7 +1,14 @@
 require 'spec_helper'
 
-describe Typo3Helper do
+describe LoadConfig do
+	describe '.load_config' do
+		it "should return the yaml config as array" do
+			LoadConfig.load_config.should include("DEPLOYMENTNAME")
+		end
+	end
+end
 
+describe Typo3Helper do
 	describe '.compile_and_import_joined_sql' do
 		it "should create, compile and import the existing joined sql file" do
 

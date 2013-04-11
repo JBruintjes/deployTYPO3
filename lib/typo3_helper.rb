@@ -245,7 +245,7 @@ $typo_db = '#{CONFIG['DB']['dbname']}';				//  Modified or inserted by deployTYP
 	end
 
 	def self.getLocalConfExtList(infile='web/dummy/typo3conf/localconf.php')
-		cmd = "php -r \'include \"#{infile}\";echo $TYPO3_CONF_VARS[\"EXT\"][\"extList\"];\'"
+		cmd = "php -r '\define(\"TYPO3_MODE\", \"BE\");include \"#{infile}\";echo $TYPO3_CONF_VARS[\"EXT\"][\"extList\"];\'"
 		extList =%x[ #{cmd} ]
 		return extList.split(',');
 	end
