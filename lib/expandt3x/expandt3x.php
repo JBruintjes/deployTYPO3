@@ -1,6 +1,7 @@
 <?php
 require("class.em_terconnection.php");
 
+$debug=false;
 // default-Settings.
 $unpackDir = "extension";
 
@@ -59,7 +60,7 @@ function autocreate_subdirs($dir) {
 		$fullPath = implode("/", $path);
 		if ($fullPath && !file_exists($fullPath)) {
 			if (mkdir($fullPath)) {
-				echo sprintf("OK: created directory '%s'\n", $fullPath);
+				if($GLOBALS['debug']) echo sprintf("OK: created directory '%s'\n", $fullPath);
 			} else {
 				echo sprintf("ERROR: directory '%s' not created\n", $fullPath);
 			}
@@ -69,7 +70,8 @@ function autocreate_subdirs($dir) {
 
 // Unpack extension(s).
 foreach ($ext as $e) {
-	if ($e["EM_CONF"]) {
+	if(is_array($e) AND array_key_exists('EM_CONF', $e)) {
+#	if ($e["EM_CONF"]) {
 
 		#log2(print_r($e,true));
 
@@ -107,7 +109,6 @@ foreach ($ext as $e) {
 		$_extemconfcontent .= '?>';
 		$e["FILES"]['ext_emconf.php']['name'] =  'ext_emconf.php';
 		$e["FILES"]['ext_emconf.php']['content'] = $_extemconfcontent; 
-
 
 		// Create unpack directory.
 		if (!file_exists($unpackDir)) {

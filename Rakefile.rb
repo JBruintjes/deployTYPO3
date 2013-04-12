@@ -311,9 +311,9 @@ namespace :ext do
 					destpath = File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key+'.t3x')
 
 					DT3Div::downloadTo(srcurl,srcpath,destpath)
-
-					cmd = "/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php #{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'], key+'.t3x')}  #{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key)}"
-					system (cmd)
+					ExpandT3x::expand("#{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'], key+'.t3x')}","#{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key)}")
+#					cmd = "/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php #{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'], key+'.t3x')}  
+					#system (cmd)
 
 					FileUtils.rm(File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key+'.t3x'))
 				end

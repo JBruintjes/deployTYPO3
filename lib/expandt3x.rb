@@ -25,12 +25,8 @@ class ExpandT3x
 			end  
 		end  
 
-#		p result[0]
-
 		depenc   = Base64.encode64(result[0]['dependencies']).gsub(/\n/, '') 
-
 		cmd = "/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php #{t3xfile}  #{extdir} #{depenc}"
-		p cmd
 		system(cmd)
 	end
 end
