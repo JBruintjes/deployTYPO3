@@ -52,6 +52,7 @@ Dir.glob('lib/tasks/*.rake').each { |r| import r }
 
 CONFIG =LoadConfig::load_config
 DT3CONST = InitDT3::load_constants
+$xmldata = nil;
 
 trackedPaths = CONFIG['trackedPaths'] 
 rootFilesBundlesDir = File.join("rootFilesBundles")

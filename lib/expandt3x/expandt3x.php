@@ -71,7 +71,6 @@ function autocreate_subdirs($dir) {
 // Unpack extension(s).
 foreach ($ext as $e) {
 	if(is_array($e) AND array_key_exists('EM_CONF', $e)) {
-#	if ($e["EM_CONF"]) {
 
 		#log2(print_r($e,true));
 

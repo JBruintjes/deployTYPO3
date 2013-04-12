@@ -5,12 +5,14 @@ class ExpandT3x
 		if (!File.exist? 'web/dummy/typo3temp/extensions.xml')
 			Typo3Helper::download_ext_xml
 		end
-
-		puts "reading in enrollment file; this could take a while."  
-		data = Nokogiri::XML::Reader(File.open("web/dummy/typo3temp/extensions.xml"))  
+		
+#		if($xmldata.nil?)
+				puts "reading in enrollment file; this could take a while."  
+				$xmldata = Nokogiri::XML::Reader(File.open("web/dummy/typo3temp/extensions.xml"))  
+#		end
 
 		result = []
-		data.each do |node|  
+		$xmldata.each do |node|  
 			if(node.name == "extension" && node.node_type == Nokogiri::XML::Reader::TYPE_ELEMENT)  
 				
 				doc = Nokogiri::XML(node.outer_xml)  
@@ -25,7 +27,9 @@ class ExpandT3x
 			end  
 		end  
 
-		depenc   = Base64.encode64(result[0]['dependencies']).gsub(/\n/, '') 
+		if(result.count > 0)
+			depenc   = Base64.encode64(result[0]['dependencies']).gsub(/\n/, '') 
+		end
 		cmd = "/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php #{t3xfile}  #{extdir} #{depenc}"
 		system(cmd)
 	end
