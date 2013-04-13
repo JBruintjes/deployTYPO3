@@ -17,9 +17,8 @@ class DT3Logger
 				print "\n"
 
 			when 'error'
-
-				@logger.error Time.now.strftime("%b-%d-%Y %H:%M") +' ERROR - '+ key+ ': '+ val
-				#self.mail('Error:'+key,Time.now.to_s+' - '+ key+ ': '+ val)
+					@logger.error Time.now.strftime("%b-%d-%Y %H:%M") +' ERROR - '+ key+ ': '+ val
+					#self.mail('Error:'+key,Time.now.to_s+' - '+ key+ ': '+ val)
 
 			when 'warn'
 				@logger.warn Time.now.strftime("%b-%d-%Y %H:%M") +' WARNING - '+ key+ ': '+ val
@@ -28,7 +27,11 @@ class DT3Logger
 			when 'unknown'
 				@logger.unknown Time.now.strftime("%b-%d-%Y %H:%M") +' UNKNOWN - '+ key+ ': '+ val
 			when 'debug'
-				@logger.debug Time.now.strftime("%b-%d-%Y %H:%M") +' DEBUG - '+ key+ ': '+ val
+				if(CONFIG['DEBUG'])
+				print "\n"
+				print Time.now.strftime("%b-%d-%Y %H:%M") +' DEBUG - '+ key+ ': '+ val
+				print "\n"
+				end
 			end
 		end
 

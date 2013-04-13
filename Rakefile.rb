@@ -362,6 +362,17 @@ namespace :ext do
 end
 
 namespace :db do
+	desc 'desc: test db connection'
+	task :conntest do
+		if DT3MySQL::test_connection
+			print "Correct DB connection.\n\n"
+		else
+			print "No correct DB connection. Check db settings\n\n"
+		end
+	end
+
+
+
 	desc 'desc: active database to sql-file'
 	task :backup do
 
