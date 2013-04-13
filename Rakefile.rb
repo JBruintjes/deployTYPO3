@@ -658,29 +658,28 @@ namespace :sub do
 
 	desc 'desc: append configured php code to configured files, usefull for overriding modules configurations'
 	task :patch_php_append do
-		if(CONFIG['PATCH']['PHP_FILE_APPEND'])
-			CONFIG['PATCH']['PHP_FILE_APPEND'].each {|key,valarr|
-				print 'Append task for: '+key+ "\n"
-				filename = 'web/'+DT3CONST['RELDIRS']['CURRENTDUMMY']+'/'+valarr['file']
-				appendCode = valarr['appendPHPCode']
+		if(CONFIG['PATCH'])
+			if(CONFIG['PATCH']['PHP_FILE_APPEND'])
+				CONFIG['PATCH']['PHP_FILE_APPEND'].each {|key,valarr|
+					print 'Append task for: '+key+ "\n"
+					filename = 'web/'+DT3CONST['RELDIRS']['CURRENTDUMMY']+'/'+valarr['file']
+					appendCode = valarr['appendPHPCode']
 
-				if File.file?(filename) 
-					last_line = 0
-					file = File.open(filename, 'r+')
-					file.each { last_line = file.pos unless file.eof? }
-					file.seek(last_line, IO::SEEK_SET)
-					file.write(appendCode)
-					file.write("?>")
-					file.close
-				else
-					print "file does not exist: "+	filename + "\n"
-				end
-			}
+					if File.file?(filename) 
+						last_line = 0
+						file = File.open(filename, 'r+')
+						file.each { last_line = file.pos unless file.eof? }
+						file.seek(last_line, IO::SEEK_SET)
+						file.write(appendCode)
+						file.write("?>")
+						file.close
+					else
+						print "file does not exist: "+	filename + "\n"
+					end
+				}
+			end
 		end
-
 	end
-
-
 end
 
 namespace :dev do 
