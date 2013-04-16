@@ -21,7 +21,11 @@ class InitDT3
 		end
 
 		## TODO detect 6.x.x versions and use new filename
-		dt3const['TYPO3_LOCALCONF_FILE'] = File.join(dt3const['DUMMYDIR'],'typo3conf','localconf.php')
+		if(dt3const['T3VERSION']['MAJOR'].to_i > 4)
+			dt3const['TYPO3_LOCALCONF_FILE'] = File.join(dt3const['DUMMYDIR'],'typo3conf','LocalConfiguration.php')
+		else
+			dt3const['TYPO3_LOCALCONF_FILE'] = File.join(dt3const['DUMMYDIR'],'typo3conf','localconf.php')
+		end
 
 		dt3const['CURRENTDUMMY'] = 'dummy-'+CONFIG['TYPO3_VERSION']
 		dt3const['CURRENTSRCTAR'] = 'typo3_src-'+CONFIG['TYPO3_VERSION']+'.tar.gz'

@@ -47,12 +47,12 @@ class Typo3Helper
 	def self.dt3_helper_extension(action)
 		if action == 'install'
 
-			extList = self.getLocalConfExtList()
+			extList = self.getLocalConfExtList(DT3CONST['TYPO3_LOCALCONF_FILE'])
 			extList << 'lsd_deployt3iu'
 			extList.uniq
 			self.setLocalconfExtList(extList,DT3CONST['TYPO3_LOCALCONF_FILE'])
 		elsif action == 'uninstall'
-			extList = self.getLocalConfExtList
+			extList = self.getLocalConfExtList(DT3CONST['TYPO3_LOCALCONF_FILE'])
 			extList.delete_if {|x| x == "lsd_deployt3iu"}
 			extList.delete('lsd_deployt3iu')
 			extList.uniq
