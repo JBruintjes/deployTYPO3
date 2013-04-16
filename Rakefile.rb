@@ -309,10 +309,13 @@ namespace :ext do
 
 					srcurl ='typo3.org'
 					srcpath = '/extensions/repository/download/'+key+'/'+hash['version']+'/t3x/'
+
+					version = hash['version']
+
 					destpath = File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key+'.t3x')
 
 					DT3Div::downloadTo(srcurl,srcpath,destpath)
-					ExpandT3x::expand("#{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'], key+'.t3x')}","#{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key)}")
+					ExpandT3x::expand("#{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'], key+'.t3x')}","#{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key)}", key, version)
 #					cmd = "/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php #{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'], key+'.t3x')}  
 					#system (cmd)
 

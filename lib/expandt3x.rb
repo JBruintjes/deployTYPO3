@@ -1,15 +1,15 @@
 class ExpandT3x
 
-	def self.expand(t3xfile, extdir)
+	def self.expand(t3xfile, extdir,key,version)
 
 		if (!File.exist? 'web/dummy/typo3temp/extensions.xml')
 			Typo3Helper::download_ext_xml
 		end
 		
-#		if($xmldata.nil?)
-				puts "reading in enrollment file; this could take a while."  
-				$xmldata = Nokogiri::XML::Reader(File.open("web/dummy/typo3temp/extensions.xml"))  
-#		end
+		#if($xmldata.nil?)
+		puts "reading in enrollment file; this could take a while."  
+		$xmldata = Nokogiri::XML::Reader(File.open("web/dummy/typo3temp/extensions.xml"))  
+		#end
 
 		result = []
 		$xmldata.each do |node|  
@@ -17,7 +17,7 @@ class ExpandT3x
 				
 				doc = Nokogiri::XML(node.outer_xml)  
 
-				doc.xpath('//*[@extensionkey="dam"]/version[@version="1.2.2"]').each do|n|
+				doc.xpath("//*[@extensionkey=\"#{key}\"]/version[@version=\"#{version}\"]").each do|n|
 					hash = {}
 					n.children.each do |c|
 						hash[c.node_name] = c.content
@@ -32,5 +32,11 @@ class ExpandT3x
 		end
 		cmd = "/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php #{t3xfile}  #{extdir} #{depenc}"
 		system(cmd)
+
+		#return 'uploads/tx_' . str_replace('_', '', $extKey) . '/';
+		#if(false)
+		#	FileUtils.mkdir("web/dummy/uploads/tx_#{extKey.sub("_", "" )}")
+		#end
+
 	end
 end
