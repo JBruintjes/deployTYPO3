@@ -371,7 +371,115 @@ namespace :db do
 		end
 	end
 
+	desc 'desc: list dumped sql-images'
+	task :imglist do
+		Dir.glob(DT3CONST['DBIMAGES']+'/*.sql').sort.each {|sql|
+			if File.extname(sql) == '.sql'
+				if(sql.split('.').count == 3) 
+					version = sql.split('.')[1]
+					name = File.basename(sql.split('.')[0])
+				elsif(sql.split('-').count == 2) 
+					version = sql.split('-')[1]
+					name = File.basename(sql.split('-')[0])
+				else
+					version = 'MASTER'
+					name = File.basename(sql,'.*')
+				end
 
+				print "Image name: #{name}\t version: #{version}\n" 
+			end
+		}
+	end
+
+	desc 'desc: import one of the sql image into the current database'
+	task :import do
+
+		images_arr = []
+		
+		Dir.glob('dbImages/*.sql').sort.each {|sql|
+			image = Hash.new
+			if File.extname(sql) == '.sql'
+				if(sql.split('.').count == 3) 
+					image['version'] = sql.split('.')[1]
+					image['name'] = File.basename(sql.split('.')[0])
+				elsif(sql.split('-').count == 2) 
+					image['version'] = sql.split('-')[1].split('.')[0]
+					image['name'] = File.basename(sql.split('-')[0])
+				else
+					image['version'] = '[MASTER]'
+					image['name'] = File.basename(sql,'.*')
+				end
+				image['time'] = File.mtime(sql).strftime("%Y-%m-%d") 
+				image['filename'] = sql
+
+				images_arr << image
+			end
+		}
+
+		print "\n"
+		images_arr.each_with_index {|img, index|
+			if(index.to_s.length==1) 
+				space =' '
+			else
+				space =''
+			end
+			print "#{space}[#{index}] Name: #{img['name']}\tDate: #{img['time']}\tVersion: #{img['version']}\n"
+		}
+		print "\nSelect the image you want to import from the list above: "
+
+		imageChoosen = STDIN.gets.chomp
+		if imageChoosen=~ /^[0-9]+$/
+			if images_arr[imageChoosen.to_i].nil?
+				print "ERR. You must enter an existing index from above."
+			else
+				dbuser,dbpass,dbhost,dbname = Typo3Helper::get_db_settings()
+				DT3MySQL.mysql_import(dbuser,dbpass,dbhost,dbname,images_arr[imageChoosen.to_i]['filename'])
+			end
+		else
+			print "ERR. You must enter a number"
+		end
+
+	end
+
+	desc 'desc: dump master sql-image'
+	task :dump do
+		if not File.directory?(DT3CONST['DBIMAGES'])
+			FileUtils.mkdir DT3CONST['DBIMAGES']
+		end
+		dbuser,dbpass,dbhost,dbname = Typo3Helper::get_db_settings()
+		filename = File.join(DT3CONST['DBIMAGES'],"#{dbname}.sql")
+		print "Overwriting master image:#{dbname}\n"
+		DT3MySQL::mysqldump_to(dbname,dbuser,dbpass,dbhost,filename)
+	end
+
+	desc 'desc: dump a version sql-image (usage rake db:dumpversion name=[optional version name])'
+	task :dumpversion do
+		filename =''
+		numbers = []
+		dbuser,dbpass,dbhost,dbname = Typo3Helper::get_db_settings()
+
+		if ENV['name'] 
+			filename = File.join(DT3CONST['DBIMAGES'],"#{dbname}-#{ENV['name']}.sql")
+			version = ENV['name']
+		else
+			Dir.foreach(DT3CONST['DBIMAGES']) {|sql|
+				tmpname = sql.split('.')
+				if(tmpname.count == 3) 
+					numbers << tmpname[1].to_i
+				end
+			}
+			if(numbers.count > 0)
+				version = (numbers.max + 1)
+			else
+				version = 1
+			end
+		
+			filename = File.join(DT3CONST['DBIMAGES'],"#{dbname}.#{version.to_s}.sql")
+		end
+
+		print "new image:#{dbname} version:#{version}\n"
+		DT3MySQL::mysqldump_to(dbname,dbuser,dbpass,dbhost,filename)
+	end
 
 	desc 'desc: active database to sql-file'
 	task :backup do

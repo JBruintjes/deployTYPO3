@@ -27,6 +27,8 @@ class InitDT3
 			dt3const['TYPO3_LOCALCONF_FILE'] = File.join(dt3const['DUMMYDIR'],'typo3conf','localconf.php')
 		end
 
+		dt3const['DBIMAGES'] = File.join("dbImages")
+
 		dt3const['CURRENTDUMMY'] = 'dummy-'+CONFIG['TYPO3_VERSION']
 		dt3const['CURRENTSRCTAR'] = 'typo3_src-'+CONFIG['TYPO3_VERSION']+'.tar.gz'
 		dt3const['CURRENTDUMMYTAR'] = 'dummy-'+CONFIG['TYPO3_VERSION']+'.tar.gz'

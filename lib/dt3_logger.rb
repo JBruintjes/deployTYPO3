@@ -27,7 +27,7 @@ class DT3Logger
 			when 'unknown'
 				@logger.unknown Time.now.strftime("%b-%d-%Y %H:%M") +' UNKNOWN - '+ key+ ': '+ val
 			when 'debug'
-				if(CONFIG['DEBUG']=='1')
+				if(CONFIG['DEBUG'].to_i==1)
 				print "\n"
 				print Time.now.strftime("%b-%d-%Y %H:%M") +' DEBUG - '+ key+ ': '+ val
 				print "\n"

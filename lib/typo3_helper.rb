@@ -166,7 +166,7 @@ class Typo3Helper
 	end
 
 	def	self.get_db_settings()
-		cmd = "php -r \'include \"#{DT3CONST['TYPO3_LOCALCONF_FILE']}\";echo \"$typo_db_username $typo_db_password $typo_db_host $typo_db\";\'"
+		cmd = "php -r \'define(\"TYPO3_MODE\", \"BE\");include \"#{DT3CONST['TYPO3_LOCALCONF_FILE']}\";echo \"$typo_db_username $typo_db_password $typo_db_host $typo_db\";\'"
 
 		dbsettings =%x[ #{cmd} ]
 		return dbsettings.split(' ');
