@@ -20,12 +20,22 @@ class DT3MySQL
 		return cmd
 	end
 
+	def self.test_connection
+		stdout = self.mysql_execute('SHOW TABLES;')
+		if stdout.include? 'denied'
+			return false
+		else
+			return 1
+		end
+	end
+
 	def self.create_mysql_base_command
 		cmd = self.create_mysql_base_command_with(CONFIG['DB']['dbuser'],CONFIG['DB']['dbhost'],CONFIG['DB']['dbpass'],CONFIG['DB']['dbname'])
 	end
 
 	def self.mysql_execute(sql)
-		DT3Logger::log('Executing SQL',sql) 
+		DT3Logger::log('Executing SQL',sql,'debug') 
+
 		cmd = self.create_mysql_base_command + "-e \"#{sql}\""
 		stdout = `#{cmd}`
 		return stdout

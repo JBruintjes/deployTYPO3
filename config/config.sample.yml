@@ -4,6 +4,7 @@
 # Place all environment configfuration values here #
 ####################################################
 
+DEBUG: 0
 DEPLOYMENTNAME: deployTYPO3 Site
 
 # If you enter 4.7 deployTYPO3 will use the latest patch version
