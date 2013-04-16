@@ -23,8 +23,30 @@ class DT3Div
 			FileUtils.rm_r( symlink )
 		end
 	end
+	def self.db_image_list 
+		images_arr = []
+		
+		Dir.glob(DT3CONST['DBIMAGES']+'/*.sql').sort.each {|sql|
+			image = Hash.new
+			if File.extname(sql) == '.sql'
+				if(sql.split('.').count == 3) 
+					image['version'] = sql.split('.')[1]
+					image['name'] = File.basename(sql.split('.')[0])
+				elsif(sql.split('-').count == 2) 
+					image['version'] = sql.split('-')[1].split('.')[0]
+					image['name'] = File.basename(sql.split('-')[0])
+				else
+					image['version'] = '[MASTER]'
+					image['name'] = File.basename(sql,'.*')
+				end
+				image['time'] = File.mtime(sql).strftime("%Y-%m-%d") 
+				image['filename'] = sql
 
-
+				images_arr << image
+			end
+		}
+		return images_arr
+	end
 
 
 

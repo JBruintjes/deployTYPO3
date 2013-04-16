@@ -361,6 +361,16 @@ namespace :ext do
 	end
 end
 
+namespace :bak do
+	desc 'desc: back-up all files and db into a bz2 file one directory higher'
+	task :allbz2 do
+		system('rake -s db:dumpversion name=backup_task')
+		print "saving #{File.basename(File.dirname(__FILE__))}.tar.bz2"
+		system("cd ..;tar cjf #{File.dirname(__FILE__)}.tar.bz2 #{File.basename(File.dirname(__FILE__))}")
+		print "\n"
+	end
+end
+
 namespace :db do
 	desc 'desc: test db connection'
 	task :conntest do
@@ -373,58 +383,34 @@ namespace :db do
 
 	desc 'desc: list dumped sql-images'
 	task :imglist do
-		Dir.glob(DT3CONST['DBIMAGES']+'/*.sql').sort.each {|sql|
-			if File.extname(sql) == '.sql'
-				if(sql.split('.').count == 3) 
-					version = sql.split('.')[1]
-					name = File.basename(sql.split('.')[0])
-				elsif(sql.split('-').count == 2) 
-					version = sql.split('-')[1]
-					name = File.basename(sql.split('-')[0])
-				else
-					version = 'MASTER'
-					name = File.basename(sql,'.*')
-				end
 
-				print "Image name: #{name}\t version: #{version}\n" 
-			end
-		}
-	end
-
-	desc 'desc: import one of the sql image into the current database'
-	task :import do
-
-		images_arr = []
-		
-		Dir.glob('dbImages/*.sql').sort.each {|sql|
-			image = Hash.new
-			if File.extname(sql) == '.sql'
-				if(sql.split('.').count == 3) 
-					image['version'] = sql.split('.')[1]
-					image['name'] = File.basename(sql.split('.')[0])
-				elsif(sql.split('-').count == 2) 
-					image['version'] = sql.split('-')[1].split('.')[0]
-					image['name'] = File.basename(sql.split('-')[0])
-				else
-					image['version'] = '[MASTER]'
-					image['name'] = File.basename(sql,'.*')
-				end
-				image['time'] = File.mtime(sql).strftime("%Y-%m-%d") 
-				image['filename'] = sql
-
-				images_arr << image
-			end
-		}
-
-		print "\n"
+		images_arr = DT3Div::db_image_list
+		string = "\n"
 		images_arr.each_with_index {|img, index|
 			if(index.to_s.length==1) 
 				space =' '
 			else
 				space =''
 			end
-			print "#{space}[#{index}] Name: #{img['name']}\tDate: #{img['time']}\tVersion: #{img['version']}\n"
+			string += "#{space}[#{index}] Name: #{img['name']}\tDate: #{img['time']}\tVersion: #{img['version']}\n"
 		}
+		print string
+	end
+
+	desc 'desc: import one of the sql image into the current database'
+	task :import do
+		
+		images_arr = DT3Div::db_image_list
+		string = "\n"
+		images_arr.each_with_index {|img, index|
+			if(index.to_s.length==1) 
+				space =' '
+			else
+				space =''
+			end
+			string += "#{space}[#{index}] Name: #{img['name']}\tDate: #{img['time']}\tVersion: #{img['version']}\n"
+		}
+		print string
 		print "\nSelect the image you want to import from the list above: "
 
 		imageChoosen = STDIN.gets.chomp
@@ -481,6 +467,7 @@ namespace :db do
 		DT3MySQL::mysqldump_to(dbname,dbuser,dbpass,dbhost,filename)
 	end
 
+=begin
 	desc 'desc: active database to sql-file'
 	task :backup do
 
@@ -498,6 +485,7 @@ namespace :db do
 		print "Dumping database"
 		DT3MySQL::mysqldump_to(dbname,dbuser,dbpass,dbhost,filename)
 	end
+=end
 
 	desc 'desc: delete all tables'
 	task :flush do

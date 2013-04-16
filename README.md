@@ -1,4 +1,4 @@
-# DeployTYPO3 [![Build Status](https://travis-ci.org/Lingewoud/deployTYPO3.png?branch=master)](https://travis-ci.org/Lingewoud/deployTYPO3)
+# DeployTYPO3 [![Build Status](https://travis-ci.org/Lingewoud/deployTYPO3.png?branch=master)](https://travis-ci.org/Lingewoud/deployTYPO3) [![Code Climate](https://codeclimate.com/github/Lingewoud/deployTYPO3.png)](https://codeclimate.com/github/Lingewoud/deployTYPO3)
 
 ![image](http://picdrop.t3lab.com/iG3nIv9Kla.png)
 
@@ -94,7 +94,6 @@ Enter ```rake help``` for an up to date list of most important commands
 ```
 $ rake help
 (in /var/customers/webs/pim/deployTYPO3)
-
 DeployTYPO3 version 1.5.1
 
 rake help                       # desc: show main tasks
@@ -106,6 +105,8 @@ rake inst:all                   # desc: purge and install the complete configure
 rake inst:man                   # desc: purge and download the complete environment but do not setup the localconf & db.
 rake inst:min                   # desc: purge and install the configured TYPO3 environment without external extensions
 
+rake bak:allbz2                 # desc: back-up all files and db into a bz2 file one directory higher
+
 rake env:copy                   # desc: copy complete typo3 environment including deployment scripts and database
 rake env:cron                   # desc: echo cron confguration
 rake env:flush_cache            # desc: remove typo3conf cache & temp files
@@ -116,15 +117,18 @@ rake env:relink                 # desc: relink extension bundles and extensions
 rake env:touchinst              # desc: Create a file web/dummy/typo3conf/ENABLE_INSTALL_TOOL
 rake env:upgrade_src            # desc: upgrade to newer version
 
-rake db:backup                  # desc: active database to sql-file
+rake db:conntest                # desc: test db connection
 rake db:copy                    # desc: copy complete database structure and schema to a new database.
+rake db:dump                    # desc: dump master sql-image
+rake db:dumpversion             # desc: dump a version sql-image (usage rake db:dumpversion name=[optional version name])
 rake db:flush                   # desc: delete all tables
+rake db:imglist                 # desc: list dumped sql-images
+rake db:import                  # desc: import one of the sql image into the current database
 rake db:install                 # desc: Install all SQL files
 rake db:tables                  # desc: show all tables
 
 rake t3org:lastversions         # desc: show last TYPO3 versions
 rake t3org:versions             # desc: show available TYPO3 versions
-
 ```
 
 ## Documentation

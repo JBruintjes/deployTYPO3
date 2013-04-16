@@ -9,6 +9,7 @@ class HelpInfo
 		help = `rake -T`
 
 		listhelp = []
+		listbak = []
 		listenv = []
 		listdb = []
 		listinst = []
@@ -26,6 +27,8 @@ class HelpInfo
 			if (not line[0,4]== '(in ' && line!='')
 				if(line[5,4]=='env:')
 					listenv << line.chomp
+				elsif(line[5,4]=='bak:')
+					listbak << line.chomp
 				elsif(line[5,3]=='db:')
 					listdb << line.chomp
 				elsif(line[5,5]=='inst:')
@@ -69,6 +72,11 @@ class HelpInfo
 			print "\n"
 		}
 
+		print "\n"
+		listbak.each {|line|
+			print line
+			print "\n"
+		}
 
 		print "\n"
 		listenv.each {|line|
