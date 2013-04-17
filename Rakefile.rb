@@ -302,11 +302,11 @@ namespace :ext do
 
 		singleList.each {|key,hash|
 			if not File.directory?(File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key))
-				if(hash['type']=='git')
+				if(hash['disable'].to_i==1)
+					DT3Logger::log("Ignoring disabled extension",key) 
+				elsif(hash['type']=='git')
 					system("git clone " + hash['uri'] + " "+ File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key))
-				end
-				if(hash['type']=='ter')
-
+				elsif(hash['type']=='ter')
 					srcurl ='typo3.org'
 					srcpath = '/extensions/repository/download/'+key+'/'+hash['version']+'/t3x/'
 
@@ -316,9 +316,6 @@ namespace :ext do
 
 					DT3Div::downloadTo(srcurl,srcpath,destpath)
 					ExpandT3x::expand("#{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'], key+'.t3x')}","#{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key)}", key, version)
-#					cmd = "/usr/bin/php -c lib/expandt3x/php.ini lib/expandt3x/expandt3x.php #{File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'], key+'.t3x')}  
-					#system (cmd)
-
 					FileUtils.rm(File.join(DT3CONST['RELDIRS']['EXTSINGLESDIR'],key+'.t3x'))
 				end
 			end

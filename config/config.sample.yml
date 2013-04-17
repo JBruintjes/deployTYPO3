@@ -68,30 +68,41 @@ EXT:
       - t3editor
       - reports 
       - extbase
+      - fluid
       - filelist
    REMOTE_SINGLES:
       templavoila:
          type: ter
          version: 1.8.0
+         disable: 1
       cc_textfunc:
          type: git
          uri: https://github.com/mipmip/cc_textfunc.git
+         disable: 1
       static_info_tables:
          type: ter
          version: 2.3.1
+         disable: 1
       devlog:
          type: ter
          version: 2.9.4
+         disable: 1
       dam:
          type: ter
          version: 1.3.1
+         disable: 1
       cooluri:
          type: ter
          version: 1.0.32
+         disable: 1
+      responsive_template:
+         type: ter
+         version: 1.0.4
    REMOTE_BUNDLES:
       pas3core:
          type: git
          uri: https://github.com/PAS3/typo3-pas3-core.git
+         disable: 1
 
 TYPO3_CONF_VARS:
    SYS:

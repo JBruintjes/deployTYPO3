@@ -65,7 +65,11 @@ class Typo3Helper
 		extList = CONFIG['EXT']['SYSTEM'].clone
 
 		CONFIG['EXT']['REMOTE_SINGLES'].each {|key,hash|
-			extList << key
+			if(hash['disable'].to_i==1)
+				DT3Logger::log("Ignoring disabled extension",key) 
+			else
+				extList << key
+			end
 		}
 
 		extDest = File.join(DT3CONST['DUMMYDIR'],"typo3conf","ext") 
