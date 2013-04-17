@@ -42,7 +42,9 @@ class DT3MySQL
 	end
 
 	def self.mysqldump_to(dbname,user,pass,host,outputfile)
-		system("mysqldump #{dbname} -u#{user} -p#{pass} -h #{host} > #{outputfile}")
+		cmd="mysqldump #{dbname} -u#{user} -p#{pass} -h #{host} > #{outputfile}"
+		DT3Logger::log('Executing SQL',cmd,'debug') 
+		system(cmd)
 	end
 
 	def self.mysql_import(user,pass,host,indb,insqlfile)
