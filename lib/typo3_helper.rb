@@ -62,9 +62,7 @@ class Typo3Helper
 
 	def self.get_ext_list_from_config_and_extdirs
 
-		#extList = []
-		#extList.concat(CONFIG['EXT']['SYSTEM'])
-		extList = CONFIG['EXT']['SYSTEM']
+		extList = CONFIG['EXT']['SYSTEM'].clone
 
 		CONFIG['EXT']['REMOTE_SINGLES'].each {|key,hash|
 			extList << key
@@ -95,23 +93,24 @@ class Typo3Helper
 		sqlFiles = []
 		sqlFiles << File.join(DT3CONST['DUMMYDIR'],"t3lib","stddb","tables.sql") 
 
-		extList.each { | extName |
+		extList.each {| extName|
 			extBase = File.join(DT3CONST['DUMMYDIR'],"typo3conf","ext") 
-		if CONFIG['EXT']['SYSTEM'].include? extName
-			extBase = File.join(DT3CONST['DUMMYDIR'],"typo3","sysext") 
-		else
-			extBase = File.join(DT3CONST['DUMMYDIR'],"typo3conf","ext") 
-		end
+			if CONFIG['EXT']['SYSTEM'].include? extName
 
-		extSql = File.join(extBase,extName,"ext_tables.sql") 
-		extSqlStatic = File.join(extBase,extName,"ext_tables_static+adt.sql") 
+				extBase = File.join(DT3CONST['DUMMYDIR'],"typo3","sysext") 
+			else
+				extBase = File.join(DT3CONST['DUMMYDIR'],"typo3conf","ext") 
+			end
 
-		if File.file?(extSql) 
-			sqlFiles << extSql	
-		end 
-		if File.file?(extSqlStatic) 
-			sqlFiles << extSqlStatic	
-		end 
+			extSql = File.join(extBase,extName,"ext_tables.sql") 
+			extSqlStatic = File.join(extBase,extName,"ext_tables_static+adt.sql") 
+
+			if File.file?(extSql) 
+				sqlFiles << extSql	
+			end 
+			if File.file?(extSqlStatic) 
+				sqlFiles << extSqlStatic	
+			end 
 		}
 
 		File.open(DT3CONST['JOINEDSQL'],"w"){|f|
