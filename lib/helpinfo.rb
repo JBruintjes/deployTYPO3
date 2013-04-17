@@ -7,129 +7,28 @@ class HelpInfo
 		print "\n"
 		print "\n"
 		help = `rake -T`
+		
+		list_main =['help','init','inst','bak','env','db','ext','t3org']
+		list_exp =['dev','test','sub','depr']
 
-		listhelp = []
-		listbak = []
-		listenv = []
-		listdb = []
-		listinst = []
-		listext = []
-		listinit = []
-		listt3org = []
-
-		listdev = []
-		listtest = []
-		listsub = []
-		listdepr = []
-
-		help.each do |line|
-			#		p line[0,4]
-			if (not line[0,4]== '(in ' && line!='')
-				if(line[5,4]=='env:')
-					listenv << line.chomp
-				elsif(line[5,4]=='bak:')
-					listbak << line.chomp
-				elsif(line[5,3]=='db:')
-					listdb << line.chomp
-				elsif(line[5,5]=='inst:')
-					listinst << line.chomp
-				elsif(line[5,4]=='ext:')
-					listext << line.chomp
-				elsif(line[5,6]=='t3org:')
-					listt3org << line.chomp
-				elsif(line[5,5]=='init:')
-					listinit << line.chomp
-				elsif(line[5,4]=='help')
-					listhelp << line.chomp
-				elsif(line[5,4]=='dev:')
-					listdev << line.chomp
-				elsif(line[5,5]=='test:')
-					listtest << line.chomp
-				elsif(line[5,4]=='sub:')
-					listsub << line.chomp
-				elsif(line[5,5]=='depr:')
-					listdepr << line.chomp
-				end
-			else
-				#list << line.chomp
-			end
-		end
-
-		listhelp.each {|line|
-			print line
-			print "\n"
-		}
-
-		print "\n"
-		listinit.each {|line|
-			print line
-			print "\n"
-		}
-
-		print "\n"
-		listinst.each {|line|
-			print line
-			print "\n"
-		}
-
-		print "\n"
-		listbak.each {|line|
-			print line
-			print "\n"
-		}
-
-		print "\n"
-		listenv.each {|line|
-			print line
-			print "\n"
-		}
-		print "\n"
-		listdb.each {|line|
-			print line
-			print "\n"
-		}
-
-		print "\n"
-		listt3org.each {|line|
-			print line
-			print "\n"
-		}
 		if(expert)
-			print "\n"
-			listdev.each {|line|
-				print line
-				print "\n"
-			}
-			print "\n"
-			listtest.each {|line|
-				print line
-				print "\n"
-			}
-
-			print "\n"
-			listext.each {|line|
-				print line
-				print "\n"
-			}
-			print "\n"
-			listsub.each {|line|
-				print line
-				print "\n"
-			}
-
-			print "\n"
-			listdepr.each {|line|
-				print line
-				print "\n"
-			}
+			list = list_main.concat(list_exp)
+		else
+			list = list_main
 		end
+		
+		list.each {|key|
+			help.each { |line|
+				if (not line[0,4]== '(in ' && line!='')
+					if(line[5,key.length+1]==key+':')
+						print line
+					end
+				end
+			}
+			print "\n"
+		}
 
 		print "\n"
-		#print help
 		print "\n"
-
 	end
-
-
-
 end
